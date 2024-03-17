@@ -1,8 +1,8 @@
-package org.app.document;
+package org.app.model;
 
 import java.util.List;
 
-public record Usuario(
+public record User(
         String name,
         String profession,
         String resume,

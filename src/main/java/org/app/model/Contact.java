@@ -1,11 +1,10 @@
-package org.app.document;
+package org.app.model;
 
 import java.util.List;
 
 public record Contact(
-        String email,
-        List<String> emails,
-        String phone,
+        List<String> email,
+        List<String> phone,
         Address address
 ) {}
 
