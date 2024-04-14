@@ -7,3 +7,6 @@ spring:
       write-concern: MAJORITY
       read-preference: primary
       grid-fs-database: gridfs
+
+server:
+  port: 5200

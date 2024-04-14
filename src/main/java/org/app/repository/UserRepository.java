@@ -12,6 +12,7 @@ import java.util.Optional;
 public interface UserRepository extends MongoRepository<User, String> {
     Optional<Object> findByName(String name);
 
-    @Query("{ 'name' : ?0, 'contact.email' : { $in: ?1 } }")
+//    @Query("{ 'name' : ?0, 'contact.email' : { $in: ?1 } }")
+    @Query("{ 'name' : ?0, 'contact.email' : { $elemMatch: { $in: ?1 } } }")
     Optional<User> findByNameAndAnyEmail(String name, List<String> emails);
 }
