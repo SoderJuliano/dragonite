@@ -1,5 +1,7 @@
 package org.app.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 import java.util.List;
 
 public record User(
@@ -9,7 +11,8 @@ public record User(
         List<Object> competence,
         List<Object> social,
         List<Object> grade,
-        String hability,
+        @JsonAlias("hability")
+        String ability,
         String avatarImg,
         String realImg,
         Contact contact

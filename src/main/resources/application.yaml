@@ -1,3 +1,9 @@
-mongodb.host=localhost
-mongodb.port=27017
-mongodb.database=local
+spring:
+  data:
+    mongodb:
+      uri: mongodb://soder:soder1989@localhost:27017/dragonite?retryWrites=true&loadBalanced=false&serverSelectionTimeoutMS=5000&connectTimeoutMS=10000&authSource=admin&authMechanism=SCRAM-SHA-256
+      authentication-database: admin
+      auto-index-creation: true
+      write-concern: MAJORITY
+      read-preference: primary
+      grid-fs-database: gridfs
