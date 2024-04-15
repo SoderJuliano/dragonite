@@ -4,7 +4,6 @@ import org.app.model.common.DefaultAnswer;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
 @RequestMapping("/config")
 public interface CustomCvUserConfigController {
 

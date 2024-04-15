@@ -20,7 +20,9 @@ public record DefaultAnswer(Boolean valid, Integer status, String message, List<
         if (content instanceof Exception ex) {
             valid = false;
             message = ex.getMessage();
-            content = ex.getCause();
+            content = ex.getCause().toString();
+        } else {
+            valid = true;
         }
         ZoneId brazilZone = ZoneId.of("America/Sao_Paulo");
         date = ZonedDateTime.now(brazilZone).toLocalDateTime();
