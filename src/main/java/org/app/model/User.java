@@ -8,9 +8,9 @@ public record User(
         String name,
         String profession,
         String resume,
-        List<Object> competence,
-        List<Object> social,
-        List<Object> grade,
+        List<String> competence,
+        List<String> social,
+        List<String> grade,
         @JsonAlias("hability")
         String ability,
         String avatarImg,
