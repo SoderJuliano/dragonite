@@ -17,4 +17,8 @@ public class Commons {
         return !isEmpty(value);
     }
 
+    public static <T> boolean isTheSame(T value, T otherValue) {
+        return value.equals(otherValue);
+    }
+
 }

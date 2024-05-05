@@ -21,3 +21,9 @@ _
 /src/main/java/org/app/config/SwaggerConfig.java,f\f\ff2c505341ad4b52cb48916f48ff52a640797d1b
 S
 #src/main/resources/application.yaml,8\b\8bf9a0c76cee89021a19081a2d70237db7e2fd8a
+e
+5src/main/java/org/app/interceptor/ApiInterceptor.java,b\f\bf0d3a4315a52761ec9b759abe5f6a735289e146
+X
+(src/main/java/org/app/utils/Commons.java,0\3\03eb5b8bbcbd76a2f1de79cb866b19eb7b16010c
+Y
+)src/main/java/org/app/utils/LocalLog.java,0\8\08502552326d41c4305ccf086c55f1df210577a8
