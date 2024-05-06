@@ -10,5 +10,3 @@ spring:
 
 server:
   port: 5200
-
-api-key: Y3VzdG9tY3ZvbmxpbmU=

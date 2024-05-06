@@ -9,6 +9,8 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 
+import static org.app.utils.Commons.notEmpty;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record DefaultAnswer(Boolean valid, Integer status, String message, List<String> messages, Object content, LocalDateTime date) {
 
@@ -20,7 +22,7 @@ public record DefaultAnswer(Boolean valid, Integer status, String message, List<
         if (content instanceof Exception ex) {
             valid = false;
             message = ex.getMessage();
-            content = ex.getCause().toString();
+            content = notEmpty(ex.getCause()) ? ex.getCause().toString() : ex.getClass();
         } else {
             valid = true;
         }
