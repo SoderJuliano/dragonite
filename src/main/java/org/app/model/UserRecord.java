@@ -1,10 +1,12 @@
 package org.app.model;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import org.springframework.data.annotation.Id;
 
 import java.util.List;
 
-public record User(
+public record UserRecord(
+        @Id String _id,
         String name,
         String profession,
         String resume,

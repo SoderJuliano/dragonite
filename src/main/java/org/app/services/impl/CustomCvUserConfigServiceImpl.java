@@ -6,14 +6,20 @@ import org.app.repository.CustomCvUserConfigRepository;
 import org.app.repository.UserRepository;
 import org.app.services.CustomCvUserConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class CustomCvUserConfigServiceImpl implements CustomCvUserConfigService {
 
-    @Autowired
-    private CustomCvUserConfigRepository customCvUserConfigRepository;
+    private final CustomCvUserConfigRepository customCvUserConfigRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+
+    public CustomCvUserConfigServiceImpl(CustomCvUserConfigRepository customCvUserConfigRepository,
+                                         UserRepository userRepository) {
+        this.customCvUserConfigRepository = customCvUserConfigRepository;
+        this.userRepository = userRepository;
+    }
 
     @Override
     public PageUserConfig getConfigs(String id) {

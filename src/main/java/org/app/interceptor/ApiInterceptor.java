@@ -16,13 +16,17 @@ public class ApiInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
+
         if (request.getRequestURI().contains("swagger") || request.getRequestURI().contains("api-docs")) {
             return true;
         }
 
         String gotApiKey = request.getHeader("Authorization");
 
-        if (Commons.notEmpty(gotApiKey) && isNotTheSame("Y3VzdG9tY3ZvbmxpbmU=", split(gotApiKey, "Bearer ", 1))) {
+        if (!Commons.notEmpty(gotApiKey) && isNotTheSame("Y3VzdG9tY3ZvbmxpbmU=", split(gotApiKey, "Bearer ", 1))) {
             LocalLog.logErr("Invalid or not present api-key");
             throw new UnauthorizedException("Invalid or missing API key");
         }

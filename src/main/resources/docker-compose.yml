@@ -1,7 +1,8 @@
 version: '3.8'
 services:
   mongodb:
-    image: mongo:latest
+    image: mongo:4.4
+    container_name: dragoniteDB
     environment:
       - MONGO_INITDB_ROOT_USERNAME=soder
       - MONGO_INITDB_ROOT_PASSWORD=soder1989
@@ -9,6 +10,5 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
-    command: --dbpath /data/db
 volumes:
   mongodb_data:
