@@ -20,7 +20,6 @@ public class User {
     private List<String> competence;
     private List<String> social;
     private List<String> grade;
-    @JsonAlias("hability")
     private String ability;
     private String avatarImg;
     private String realImg;
