@@ -1,11 +1,15 @@
 package org.app.services.impl;
 
+import org.apache.coyote.BadRequestException;
 import org.app.Exceptions.NotFoundException;
+import org.app.model.Login;
 import org.app.model.UserRecord;
 import org.app.model.entity.User;
+import org.app.repository.LoginRepository;
 import org.app.repository.UserRepository;
 import org.app.services.UserService;
 import org.app.utils.LocalLog;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -17,8 +21,11 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    private final LoginRepository loginRepository;
+
+    public UserServiceImpl(UserRepository userRepository, LoginRepository loginRepository) {
         this.userRepository = userRepository;
+        this.loginRepository = loginRepository;
     }
 
     public User newUser(UserRecord userRecord) {
@@ -66,6 +73,33 @@ public class UserServiceImpl implements UserService {
         LocalLog.log("Updating user, name: " + userToUpdate.getName() + ", email: " + userToUpdate.getContact().email().get(0));
         return userRepository.save(userToUpdate);
     }
+
+    @Override
+    public User login(Login login) throws BadRequestException {
+        LocalLog.log("Trying login for " + login.email());
+        Optional<Login> optionalLogin = loginRepository.findByUserIdAndPasswordAndEmail(login.userId(), login.password(), login.email());
+
+        Login foundLogin = optionalLogin.orElseThrow(() -> {
+            LocalLog.logErr("Login not found for user " + login.email());
+            return new BadRequestException("Can't do login");
+        });
+
+        return userRepository.findById(foundLogin.userId()).orElseThrow(() -> {
+            LocalLog.logErr("Login failed for user " + login.email());
+            return new BadRequestException("Can't do login");
+        });
+    }
+
+    @Override
+    public Login newLogin(Login login) throws BadRequestException {
+        userRepository.findById(login.userId()).orElseThrow(() -> {
+            LocalLog.logErr("User do not exist for " + login.email());
+            return new BadRequestException("Can't do login");
+        });
+
+        return loginRepository.insert(login);
+    }
+
 
     private User getUserbyId(String id) {
         Optional<User> userOptional = userRepository.findById(id);

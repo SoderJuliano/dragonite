@@ -1,6 +1,8 @@
 package org.app.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.coyote.BadRequestException;
+import org.app.model.Login;
 import org.app.model.UserRecord;
 import org.app.model.common.DefaultAnswer;
 import org.app.services.UserService;
@@ -23,13 +25,23 @@ public class UserController {
         return ResponseEntity.status(200).body(new DefaultAnswer(userService.getUser(id)));
     }
 
-    @PostMapping(path ="/", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DefaultAnswer> newUser(@RequestBody UserRecord userRecord) {
         return ResponseEntity.status(201).body(new DefaultAnswer(userService.newUser(userRecord)));
     }
 
-    @PutMapping(path = "/", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DefaultAnswer> updateFullUser(@RequestBody UserRecord userRecord) {
         return ResponseEntity.status(200).body(new DefaultAnswer(userService.updateUser(userRecord)));
+    }
+
+    @PostMapping(path = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<DefaultAnswer> login(@RequestBody Login login) throws BadRequestException {
+        return  ResponseEntity.status(200).body(new DefaultAnswer(userService.login(login)));
+    }
+
+    @PostMapping(path = "/register", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<DefaultAnswer> newLogin(@RequestBody Login login) throws BadRequestException {
+        return  ResponseEntity.status(200).body(new DefaultAnswer(userService.newLogin(login)));
     }
 }

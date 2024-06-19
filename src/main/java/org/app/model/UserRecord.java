@@ -18,4 +18,8 @@ public record UserRecord(
         String avatarImg,
         String realImg,
         Contact contact
-){}
+){
+        public UserRecord() {
+                this(null, null, null, null, null, null, null, null, null, null, null);
+        }
+}
