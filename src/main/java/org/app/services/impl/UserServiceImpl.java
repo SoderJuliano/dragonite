@@ -12,6 +12,8 @@ import org.app.utils.LocalLog;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.app.utils.GenericMapper.mapFields;
@@ -77,12 +79,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public User login(Login login) throws BadRequestException {
         LocalLog.log("Trying login for " + login.email());
-        Optional<Login> optionalLogin = loginRepository.findByUserIdAndPasswordAndEmail(login.userId(), login.password(), login.email());
+        List<Login> logins = loginRepository.findByUserIdAndPasswordAndEmail(login.userId(), login.password(), login.email());
 
-        Login foundLogin = optionalLogin.orElseThrow(() -> {
+        if (logins.isEmpty()) {
             LocalLog.logErr("Login not found for user " + login.email());
-            return new BadRequestException("Can't do login");
-        });
+            throw new BadRequestException("No matching user found.");
+        }
+
+        Login foundLogin = logins.get(0);
 
         return userRepository.findById(foundLogin.userId()).orElseThrow(() -> {
             LocalLog.logErr("Login failed for user " + login.email());
@@ -96,8 +100,13 @@ public class UserServiceImpl implements UserService {
             LocalLog.logErr("User do not exist for " + login.email());
             return new BadRequestException("Can't do login");
         });
-
-        return loginRepository.insert(login);
+        return loginRepository.insert(
+                new Login(
+                        login.email(),
+                        login.password(),
+                        login.userId(),
+                        LocalDateTime.now(),
+                        LocalDateTime.now()));
     }
 
 
