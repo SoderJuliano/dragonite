@@ -9,7 +9,6 @@ import org.app.repository.LoginRepository;
 import org.app.repository.UserRepository;
 import org.app.services.UserService;
 import org.app.utils.LocalLog;
-import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -79,17 +78,26 @@ public class UserServiceImpl implements UserService {
     @Override
     public User login(Login login) throws BadRequestException {
         LocalLog.log("Trying login for " + login.email());
-        List<Login> logins = loginRepository.findByUserIdAndPasswordAndEmail(login.userId(), login.password(), login.email());
+
+        List<Login> logins;
+
+        if(login.userId().isBlank()) {
+            logins = loginRepository.findByEmailAndPassword(login.email(), login.password());
+        }else {
+            logins = loginRepository.findByUserIdAndPasswordAndEmail(login.userId(), login.password(), login.email());
+        }
 
         if (logins.isEmpty()) {
             LocalLog.logErr("Login not found for user " + login.email());
             throw new BadRequestException("No matching user found.");
+        }else {
+            LocalLog.log("Login sucessfully for user " + login.email());
         }
 
         Login foundLogin = logins.get(0);
 
         return userRepository.findById(foundLogin.userId()).orElseThrow(() -> {
-            LocalLog.logErr("Login failed for user " + login.email());
+            LocalLog.logErr("Login failed for user " + login.email() + ". Data not found in users collection.");
             return new BadRequestException("Can't do login");
         });
     }
@@ -107,6 +115,16 @@ public class UserServiceImpl implements UserService {
                         login.userId(),
                         LocalDateTime.now(),
                         LocalDateTime.now()));
+    }
+
+    @Override
+    public void updateUserName(String name, String email) {
+        Optional<User> userOptional = userRepository.findFirstByEmail(email);
+        if (userOptional.isEmpty()) {
+            throw new NotFoundException("User not found");
+        }
+        userOptional.get().setName(name);
+        userRepository.save(userOptional.get());
     }
 
 

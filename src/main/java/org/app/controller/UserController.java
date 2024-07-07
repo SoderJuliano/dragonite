@@ -44,4 +44,10 @@ public class UserController {
     public ResponseEntity<DefaultAnswer> newLogin(@RequestBody Login login) throws BadRequestException {
         return  ResponseEntity.status(200).body(new DefaultAnswer(userService.newLogin(login)));
     }
+
+    @PatchMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> updateName(@RequestParam String name, @RequestParam String email) {
+        userService.updateUserName(name, email);
+        return ResponseEntity.ok().build();
+    }
 }

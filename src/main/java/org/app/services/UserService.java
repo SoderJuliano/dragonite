@@ -16,4 +16,6 @@ public interface UserService {
     public User login(Login login) throws BadRequestException;
 
     public Login newLogin(Login login) throws BadRequestException;
+
+    public void updateUserName(String name, String email);
 }
