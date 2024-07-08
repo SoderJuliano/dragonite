@@ -1,6 +1,12 @@
 spring:
   jackson:
       time-zone: America/Sao_Paulo
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
   data:
     mongodb:
       uri: mongodb://soder:soder1989@localhost:27017/dragonite?retryWrites=true&loadBalanced=false&serverSelectionTimeoutMS=5000&connectTimeoutMS=10000&authSource=admin&authMechanism=SCRAM-SHA-256

@@ -7,7 +7,7 @@ import org.app.model.entity.User;
 
 public interface UserService {
 
-    public User newUser(UserRecord userRecord);
+    public User newUser(UserRecord userRecord) throws BadRequestException;
 
     public User getUser(String id);
 

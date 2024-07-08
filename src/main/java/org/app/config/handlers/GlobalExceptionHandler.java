@@ -1,19 +1,28 @@
 package org.app.config.handlers;
 
+import com.mongodb.DuplicateKeyException;
 import org.app.Exceptions.NotFoundException;
 import org.app.Exceptions.UnauthorizedException;
 import org.app.model.common.DefaultAnswer;
+import org.app.utils.LocalLog;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.app.config.EmojiParser.parseEmojis;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected runtime error occurred");
+        LocalLog.logErr(":skull An unexpected runtime error occurred");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(parseEmojis(":skull An unexpected runtime error occurred"));
     }
 
     @ExceptionHandler(NotFoundException.class)
@@ -29,5 +38,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException exception) {
         return ResponseEntity.status(422).body(new DefaultAnswer(exception));
+    }
+
+    @ExceptionHandler(DuplicateKeyException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ResponseEntity<Object> handleDuplicateKeyException(DuplicateKeyException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT.value()).body(new DefaultAnswer(ex));
     }
 }

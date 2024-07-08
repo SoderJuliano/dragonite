@@ -26,7 +26,7 @@ public class UserController {
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<DefaultAnswer> newUser(@RequestBody UserRecord userRecord) {
+    public ResponseEntity<DefaultAnswer> newUser(@RequestBody UserRecord userRecord) throws BadRequestException {
         return ResponseEntity.status(201).body(new DefaultAnswer(userService.newUser(userRecord)));
     }
 

@@ -1,5 +1,6 @@
 package org.app.services.impl;
 
+import com.mongodb.DuplicateKeyException;
 import org.apache.coyote.BadRequestException;
 import org.app.Exceptions.NotFoundException;
 import org.app.model.Login;
@@ -15,7 +16,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static org.app.utils.Commons.isNull;
 import static org.app.utils.GenericMapper.mapFields;
+import static org.app.utils.LocalLog.newLine;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -29,18 +32,30 @@ public class UserServiceImpl implements UserService {
         this.loginRepository = loginRepository;
     }
 
-    public User newUser(UserRecord userRecord) {
+    public User newUser(UserRecord userRecord) throws BadRequestException {
         if(userRecord.contact() == null || userRecord.contact().email().isEmpty()) {
+            LocalLog.logErr(":virus no email found in the payload");
             throw new IllegalArgumentException("Must have at list one email to save data into database");
         }
+        LocalLog.log(":star New user request for " + userRecord.contact().email());
         if(userRecord.name().isEmpty()) {
+            LocalLog.logErr(":virus no name found in the payload for "+userRecord.contact().email());
             throw new IllegalArgumentException("Must have a name");
         }
-        userRepository.findByNameAndAnyEmail(userRecord.name(), userRecord.contact().email()).ifPresent(u -> {
-            throw new IllegalArgumentException("User already exists");
-        });
         User newUser = new User();
-        return userRepository.insert((User) mapFields(newUser, userRecord));
+        try {
+            userRepository.findByNameAndAnyEmail(userRecord.name(), userRecord.contact().email()).ifPresent(u -> {
+                LocalLog.logErr(":negative This user already exist");
+                throw new IllegalArgumentException("User already exists");
+            });
+            newUser = userRepository.insert((User) mapFields(newUser, userRecord));
+        }catch (Exception exception) {
+            LocalLog.logErr(":skull Probably duplicated _id");
+            throw new BadRequestException("Can't create new user with those informations");
+        }
+
+        LocalLog.log(":positive User created for " + userRecord.contact().email());
+        return newUser;
     }
 
     @Override
