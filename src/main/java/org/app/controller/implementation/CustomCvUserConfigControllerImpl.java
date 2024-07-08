@@ -2,6 +2,7 @@ package org.app.controller.implementation;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.app.controller.CustomCvUserConfigController;
+import org.app.model.PageUserConfig;
 import org.app.model.common.DefaultAnswer;
 import org.app.services.CustomCvUserConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +22,7 @@ public class CustomCvUserConfigControllerImpl implements CustomCvUserConfigContr
     }
 
     @Override
-    public ResponseEntity<DefaultAnswer> setNewConfigs(String id) {
-        return ResponseEntity.status(201).body(new DefaultAnswer(customCvUserConfigService.serNewConfigs(id)));
+    public ResponseEntity<DefaultAnswer> saveConfigs(String id, PageUserConfig pageUserConfig) {
+        return ResponseEntity.status(201).body(new DefaultAnswer(customCvUserConfigService.saveNewConfigs(id, pageUserConfig)));
     }
 }

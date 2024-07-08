@@ -57,6 +57,7 @@ public class EmojiParser {
         emojiMap.put("go_down", "\u2B07\uFE0F");    // ⬇️
         emojiMap.put("loz", "\uD83D\uDC8E");        // 💎
         emojiMap.put("warning", "\u26A0\uFE0F");    // ⚠️
+        emojiMap.put("time", "\u23F0");  // ⏰
     }
 
     public static String parseEmojis(String text) {

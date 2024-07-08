@@ -18,4 +18,6 @@ public interface UserService {
     public Login newLogin(Login login) throws BadRequestException;
 
     public void updateUserName(String name, String email);
+
+    boolean userExistByNameAndEmail(String name, String email);
 }

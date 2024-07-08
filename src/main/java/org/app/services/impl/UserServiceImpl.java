@@ -18,6 +18,7 @@ import java.util.Optional;
 
 import static org.app.utils.Commons.isNull;
 import static org.app.utils.GenericMapper.mapFields;
+import static org.app.utils.LocalLog.logErr;
 import static org.app.utils.LocalLog.newLine;
 
 @Service
@@ -34,23 +35,23 @@ public class UserServiceImpl implements UserService {
 
     public User newUser(UserRecord userRecord) throws BadRequestException {
         if(userRecord.contact() == null || userRecord.contact().email().isEmpty()) {
-            LocalLog.logErr(":virus no email found in the payload");
+            logErr(":virus no email found in the payload");
             throw new IllegalArgumentException("Must have at list one email to save data into database");
         }
         LocalLog.log(":star New user request for " + userRecord.contact().email());
         if(userRecord.name().isEmpty()) {
-            LocalLog.logErr(":virus no name found in the payload for "+userRecord.contact().email());
+            logErr(":virus no name found in the payload for "+userRecord.contact().email());
             throw new IllegalArgumentException("Must have a name");
         }
         User newUser = new User();
         try {
             userRepository.findByNameAndAnyEmail(userRecord.name(), userRecord.contact().email()).ifPresent(u -> {
-                LocalLog.logErr(":negative This user already exist");
+                logErr(":negative This user already exist");
                 throw new IllegalArgumentException("User already exists");
             });
             newUser = userRepository.insert((User) mapFields(newUser, userRecord));
         }catch (Exception exception) {
-            LocalLog.logErr(":skull Probably duplicated _id");
+            logErr(":skull Probably duplicated _id");
             throw new BadRequestException("Can't create new user with those informations");
         }
 
@@ -68,8 +69,7 @@ public class UserServiceImpl implements UserService {
         User userToUpdate = userRepository.findByNameAndAnyEmail(userRecord.name(), userRecord.contact().email())
                 .orElseThrow(
                         () -> {
-                            System.out.println("User not found");
-                            LocalLog.logErr("User not found during update. User's name: " + userRecord.name() + " user's email: " +
+                            logErr(":negative User not found during update. User's name: " + userRecord.name() + " user's email: " +
                                     userRecord.contact().email().get(0));
                             return new NotFoundException("User not found");
                         }
@@ -86,13 +86,13 @@ public class UserServiceImpl implements UserService {
         userToUpdate.setRealImg(userRecord.realImg());
         userToUpdate.setContact(userRecord.contact());
 
-        LocalLog.log("Updating user, name: " + userToUpdate.getName() + ", email: " + userToUpdate.getContact().email().get(0));
+        LocalLog.log(":positive Updating user, name: " + userToUpdate.getName() + ", email: " + userToUpdate.getContact().email().get(0));
         return userRepository.save(userToUpdate);
     }
 
     @Override
     public User login(Login login) throws BadRequestException {
-        LocalLog.log("Trying login for " + login.email());
+        LocalLog.log(":loz Trying login for " + login.email());
 
         List<Login> logins;
 
@@ -103,16 +103,16 @@ public class UserServiceImpl implements UserService {
         }
 
         if (logins.isEmpty()) {
-            LocalLog.logErr("Login not found for user " + login.email());
+            logErr(":negative Login not found for user " + login.email());
             throw new BadRequestException("No matching user found.");
         }else {
-            LocalLog.log("Login sucessfully for user " + login.email());
+            LocalLog.log(":positive Login sucessfully for user " + login.email());
         }
 
         Login foundLogin = logins.get(0);
 
         return userRepository.findById(foundLogin.userId()).orElseThrow(() -> {
-            LocalLog.logErr("Login failed for user " + login.email() + ". Data not found in users collection.");
+            logErr(":warning Login failed for user " + login.email() + ". Data not found in users collection.");
             return new BadRequestException("Can't do login");
         });
     }
@@ -120,7 +120,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Login newLogin(Login login) throws BadRequestException {
         userRepository.findById(login.userId()).orElseThrow(() -> {
-            LocalLog.logErr("User do not exist for " + login.email());
+            logErr(":negative User do not exist for " + login.email());
             return new BadRequestException("Can't do login");
         });
         return loginRepository.insert(
@@ -136,16 +136,25 @@ public class UserServiceImpl implements UserService {
     public void updateUserName(String name, String email) {
         Optional<User> userOptional = userRepository.findFirstByEmail(email);
         if (userOptional.isEmpty()) {
+            logErr(":negative User not found for email "+email);
             throw new NotFoundException("User not found");
         }
         userOptional.get().setName(name);
         userRepository.save(userOptional.get());
+        LocalLog.log(":positive User's name updated for email "+email);
+    }
+
+    @Override
+    public boolean userExistByNameAndEmail(String name, String email) {
+        Optional<User> userOptional = userRepository.findByNameAndAnyEmail(name, List.of(email));
+        return userOptional.isPresent();
     }
 
 
     private User getUserbyId(String id) {
         Optional<User> userOptional = userRepository.findById(id);
         if (userOptional.isEmpty()) {
+            logErr(":negative User not found for id "+ id);
             throw new NotFoundException("User not found");
         }
         return userOptional.get();

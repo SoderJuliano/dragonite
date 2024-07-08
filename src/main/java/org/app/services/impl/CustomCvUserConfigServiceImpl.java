@@ -8,6 +8,9 @@ import org.app.services.CustomCvUserConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import static org.app.utils.Commons.isNull;
+import static org.app.utils.LocalLog.log;
+
 @Service
 public class CustomCvUserConfigServiceImpl implements CustomCvUserConfigService {
 
@@ -27,8 +30,12 @@ public class CustomCvUserConfigServiceImpl implements CustomCvUserConfigService 
     }
 
     @Override
-    public PageUserConfig serNewConfigs(String userId) {
+    public PageUserConfig saveNewConfigs(String userId, PageUserConfig pageUserConfig) {
+        log(":loz Saving new site's config for userId " + userId);
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User does not exist"));
-        return customCvUserConfigRepository.insert(new PageUserConfig(userId));
+        if(isNull(pageUserConfig)) {
+            return customCvUserConfigRepository.insert(new PageUserConfig(userId));
+        }
+        return customCvUserConfigRepository.insert(pageUserConfig);
     }
 }

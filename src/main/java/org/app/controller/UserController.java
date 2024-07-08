@@ -47,6 +47,9 @@ public class UserController {
 
     @PatchMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateName(@RequestParam String name, @RequestParam String email) {
+        if(userService.userExistByNameAndEmail(name, email)) {
+            return ResponseEntity.status(100).build();
+        }
         userService.updateUserName(name, email);
         return ResponseEntity.ok().build();
     }
