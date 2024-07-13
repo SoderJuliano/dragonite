@@ -23,17 +23,30 @@ public class SwaggerConfig {
                 .build();
     }
 
-    @Bean
-    public OpenAPI openApi() {
+//     @Bean
+//     public OpenAPI openApi() {
+//         return new OpenAPI()
+//                 .info(new Info().title("DRAGONITE API BETA")
+//                 .license(new License().name("Dragonite API")))
+//                 .components(new Components()
+//                         .addSecuritySchemes("Authorization",
+//                                 new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("String")
+//                                         .in(SecurityScheme.In.HEADER).name("Authorization")))
+//                 .addSecurityItem(
+//                         new SecurityRequirement().addList("Authorization", Arrays.asList("read", "write")));
+
+//     }
+        @Bean
+        public OpenAPI openApi(@Value("${swagger.base-url:http://localhost:8080}") String baseUrl) {
         return new OpenAPI()
                 .info(new Info().title("DRAGONITE API BETA")
                 .license(new License().name("Dragonite API")))
+                .servers(Arrays.asList(new Server().url(baseUrl)))
                 .components(new Components()
                         .addSecuritySchemes("Authorization",
                                 new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("String")
                                         .in(SecurityScheme.In.HEADER).name("Authorization")))
-                .addSecurityItem(
-                        new SecurityRequirement().addList("Authorization", Arrays.asList("read", "write")));
+                .addSecurityItem(new SecurityRequirement().addList("Authorization", Arrays.asList("read", "write")));
+        }
 
-    }
 }

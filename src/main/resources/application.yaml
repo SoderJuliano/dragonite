@@ -25,5 +25,4 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
   servers:
-    - url: https://76a2-170-233-196-180.ngrok-free.app
-
+    - url: ${SWAGGER_BASE_URL:http://localhost:5200}
