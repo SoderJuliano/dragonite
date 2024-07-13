@@ -18,11 +18,3 @@ spring:
 
 server:
   port: 5200
-
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-  servers:
-    - url: ${SWAGGER_BASE_URL:http://localhost:5200}
