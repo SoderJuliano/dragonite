@@ -15,11 +15,11 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.app.utils.Commons.isNull;
 import static org.app.utils.GenericMapper.mapFields;
-import static org.app.utils.LocalLog.logErr;
-import static org.app.utils.LocalLog.newLine;
+import static org.app.utils.LocalLog.*;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -28,9 +28,12 @@ public class UserServiceImpl implements UserService {
 
     private final LoginRepository loginRepository;
 
-    public UserServiceImpl(UserRepository userRepository, LoginRepository loginRepository) {
+    private final TwoStepServiceImpl twoStepService;
+
+    public UserServiceImpl(UserRepository userRepository, LoginRepository loginRepository, TwoStepServiceImpl twoStepService) {
         this.userRepository = userRepository;
         this.loginRepository = loginRepository;
+        this.twoStepService = twoStepService;
     }
 
     public User newUser(UserRecord userRecord) throws BadRequestException {
@@ -123,13 +126,19 @@ public class UserServiceImpl implements UserService {
             logErr(":negative User do not exist for " + login.email());
             return new BadRequestException("Can't do login");
         });
-        return loginRepository.insert(
+        Login newLogin = loginRepository.insert(
                 new Login(
                         login.email(),
                         login.password(),
                         login.userId(),
                         LocalDateTime.now(),
                         LocalDateTime.now()));
+
+        LocalLog.log(":positive New login created for " + login.email());
+        String token = UUID.randomUUID().toString();
+        String key = login.email()+login.userId();
+        twoStepService.sendMessage(login.email(), token, "Your confirmation token", key);
+        return newLogin;
     }
 
     @Override
