@@ -2,6 +2,7 @@ package org.app.services.impl;
 
 import org.app.services.TwoStepService;
 import org.app.utils.LocalLog;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.URI;
@@ -11,6 +12,7 @@ import java.net.http.HttpResponse;
 
 import static org.app.utils.LocalLog.log;
 
+@Service
 public class TwoStepServiceImpl implements TwoStepService {
     HttpClient client = HttpClient.newHttpClient();
 
