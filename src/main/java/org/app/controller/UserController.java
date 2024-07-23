@@ -31,7 +31,7 @@ public class UserController {
     }
 
     @PutMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<DefaultAnswer> updateFullUser(@RequestBody UserRecord userRecord) {
+    public ResponseEntity<DefaultAnswer> updateFullUser(@RequestBody UserRecord userRecord) throws BadRequestException {
         return ResponseEntity.status(200).body(new DefaultAnswer(userService.updateUser(userRecord)));
     }
 
@@ -52,5 +52,10 @@ public class UserController {
         }
         userService.updateUserName(name, email);
         return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping(path = "/activate/{id}/{code}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<DefaultAnswer> activateUser(@PathVariable String id, @PathVariable String code) throws BadRequestException {
+        return ResponseEntity.status(200).body(userService.activateUserById(id, code));
     }
 }

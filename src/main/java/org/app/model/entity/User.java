@@ -24,6 +24,8 @@ public class User {
     private String avatarImg;
     private String realImg;
     private Contact contact;
+    private boolean actived = false;
+    private String activationCode = "";
 
     // Constructors
     public User() {
@@ -64,6 +66,14 @@ public class User {
 
     public String getName() {
         return name;
+    }
+
+    public boolean isActived() {
+        return actived;
+    }
+
+    public String getActivationCode() {
+        return activationCode;
     }
 
     public void setName(String name) {
@@ -140,6 +150,14 @@ public class User {
 
     public void setContact(Contact contact) {
         this.contact = contact;
+    }
+
+    public void setActivationCode(String activationCode) {
+        this.activationCode = activationCode;
+    }
+
+    public void setActived(boolean actived) {
+        this.actived = actived;
     }
 
     // Equals and HashCode

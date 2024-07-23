@@ -10,11 +10,13 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+import static org.app.utils.Commons.notEmpty;
 import static org.app.utils.LocalLog.log;
 
 @Service
 public class TwoStepServiceImpl implements TwoStepService {
-    HttpClient client = HttpClient.newHttpClient();
+    private HttpClient client = HttpClient.newHttpClient();
+    private final String abraHost = "https://abra-api.top";
 
     @Override
     public boolean sendMessage(String email, String message, String subject, String key) {
@@ -25,15 +27,9 @@ public class TwoStepServiceImpl implements TwoStepService {
                   "content": "%s"
                 }""", subject, key, message);
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://abra-api.top/notifications"))
-                .header("accept", "application/json")
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                .build();
-
         try {
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = client.send(mountAbraRequest(requestBody),
+                    HttpResponse.BodyHandlers.ofString());
             log(":email Abra response status code: " + response.statusCode() + " for email: " + email + " with key: " + key);
             log("email Response body: " + response.body());
         } catch (IOException | InterruptedException e) {
@@ -47,5 +43,40 @@ public class TwoStepServiceImpl implements TwoStepService {
     @Override
     public boolean validateEmail(String token) {
         return false;
+    }
+
+    @Override
+    public boolean sendEmail(String email, String message, String subject) {
+
+        String url = String.format("%s/email/send-email/%s/%s/%s", abraHost, email, subject, message);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("accept", "*/*")
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
+
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            log(":send_email Email response status code: " + response.statusCode() + " for email: " + email);
+
+            return response.statusCode() == 200 || response.statusCode() == 201;
+        } catch (IOException | InterruptedException e) {
+            String err = notEmpty(e.getMessage()) ? e.getMessage() : "";
+            log(":bug Exception during sending email to: "+email+". Exception: "+err);
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    private HttpRequest mountAbraRequest(String requestBody) {
+        return HttpRequest.newBuilder()
+                .uri(URI.create(abraHost+ "/notifications"))
+                .header("accept", "application/json")
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
     }
 }

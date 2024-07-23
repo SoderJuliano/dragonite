@@ -5,6 +5,7 @@ import org.apache.coyote.BadRequestException;
 import org.app.Exceptions.NotFoundException;
 import org.app.model.Login;
 import org.app.model.UserRecord;
+import org.app.model.common.DefaultAnswer;
 import org.app.model.entity.User;
 import org.app.repository.LoginRepository;
 import org.app.repository.UserRepository;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -68,7 +70,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUser(UserRecord userRecord) {
+    public User updateUser(UserRecord userRecord) throws BadRequestException {
         User userToUpdate = userRepository.findByNameAndAnyEmail(userRecord.name(), userRecord.contact().email())
                 .orElseThrow(
                         () -> {
@@ -78,6 +80,10 @@ public class UserServiceImpl implements UserService {
                         }
                 );
 
+        if(!userToUpdate.isActived()) {
+            logErr(":lock Tried update user without confirm email account for email "+userRecord.contact().email());
+            throw new BadRequestException("User did not confirm email account");
+        }
         userToUpdate.setName(userRecord.name());
         userToUpdate.setProfession(userRecord.profession());
         userToUpdate.setResume(userRecord.resume());
@@ -114,15 +120,22 @@ public class UserServiceImpl implements UserService {
 
         Login foundLogin = logins.get(0);
 
-        return userRepository.findById(foundLogin.userId()).orElseThrow(() -> {
+        User user = userRepository.findById(foundLogin.userId()).orElseThrow(() -> {
             logErr(":warning Login failed for user " + login.email() + ". Data not found in users collection.");
             return new BadRequestException("Can't do login");
         });
+
+        if(!user.isActived()) {
+            logErr(":lock Tried login without confirm email account for email "+user.getContact().email());
+            throw new BadRequestException("User did not confirm email account");
+        }
+
+        return user;
     }
 
     @Override
     public Login newLogin(Login login) throws BadRequestException {
-        userRepository.findById(login.userId()).orElseThrow(() -> {
+        User user = userRepository.findById(login.userId()).orElseThrow(() -> {
             logErr(":negative User do not exist for " + login.email());
             return new BadRequestException("Can't do login");
         });
@@ -137,7 +150,17 @@ public class UserServiceImpl implements UserService {
         LocalLog.log(":positive New login created for " + login.email());
         String token = UUID.randomUUID().toString();
         String key = login.email()+login.userId();
-        twoStepService.sendMessage(login.email(), token, "Your confirmation token", key);
+
+        twoStepService.sendEmail(login.email(), token, "[en]Your confirmation token/[pt]Código de confirmação");
+        twoStepService.sendMessage(login.email(), "[en]We've sent a confirmation code to your email." +
+                        "[pt]Enviamos um código de confirmação para seu email. E-mail: "+login.email(),
+                "Please confirm your account", key);
+        log(":receive_email Sent confirmation account email and message to user "+login.email());
+
+        user.setActivationCode(token);
+        user.setActived(false);
+        userRepository.save(user);
+
         return newLogin;
     }
 
@@ -157,6 +180,18 @@ public class UserServiceImpl implements UserService {
     public boolean userExistByNameAndEmail(String name, String email) {
         Optional<User> userOptional = userRepository.findByNameAndAnyEmail(name, List.of(email));
         return userOptional.isPresent();
+    }
+
+    @Override
+    public DefaultAnswer activateUserById(String id, String code) throws BadRequestException {
+        User user = getUserbyId(id);
+        if(user.isActived() && !Objects.equals(user.getActivationCode(), code)) {
+            logErr(":lock User can't be actived due conditions, actived: "+user.isActived()+" code mathes: "
+                    +Objects.equals(user.getActivationCode(), code));
+            throw new BadRequestException("User cant be actived");
+        }
+        user.setActived(true);
+        return new DefaultAnswer(userRepository.save(user));
     }
 
 
