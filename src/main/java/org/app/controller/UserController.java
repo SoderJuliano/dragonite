@@ -11,6 +11,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.UnsupportedEncodingException;
+
 @Tag(name = "custom-cv-online`s User", description = "User`s endpoints of https://custom-cv-online.netlify.app.")
 @RestController
 @RequestMapping("/user")
@@ -41,7 +43,7 @@ public class UserController {
     }
 
     @PostMapping(path = "/register", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<DefaultAnswer> newLogin(@RequestBody Login login) throws BadRequestException {
+    public ResponseEntity<DefaultAnswer> newLogin(@RequestBody Login login) throws BadRequestException, UnsupportedEncodingException {
         return  ResponseEntity.status(200).body(new DefaultAnswer(userService.newLogin(login)));
     }
 

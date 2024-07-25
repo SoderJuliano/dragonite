@@ -10,6 +10,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
+
 import static org.app.utils.Commons.notEmpty;
 import static org.app.utils.LocalLog.log;
 
@@ -46,9 +50,13 @@ public class TwoStepServiceImpl implements TwoStepService {
     }
 
     @Override
-    public boolean sendEmail(String email, String message, String subject) {
+    public boolean sendEmail(String email, String message, String subject) throws UnsupportedEncodingException {
 
-        String url = String.format("%s/email/send-email/%s/%s/%s", abraHost, email, subject, message);
+        String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
+        String encodedSubject = URLEncoder.encode("[en]Your confirmation token/[pt]Código de confirmação", StandardCharsets.UTF_8);
+        String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8);
+
+        String url = String.format("%s/email/send-email/%s/%s/%s", abraHost, encodedEmail, encodedMessage, encodedSubject);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))

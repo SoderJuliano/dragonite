@@ -6,6 +6,8 @@ import org.app.model.UserRecord;
 import org.app.model.common.DefaultAnswer;
 import org.app.model.entity.User;
 
+import java.io.UnsupportedEncodingException;
+
 public interface UserService {
 
     public User newUser(UserRecord userRecord) throws BadRequestException;
@@ -16,7 +18,7 @@ public interface UserService {
 
     public User login(Login login) throws BadRequestException;
 
-    public Login newLogin(Login login) throws BadRequestException;
+    public Login newLogin(Login login) throws BadRequestException, UnsupportedEncodingException;
 
     public void updateUserName(String name, String email);
 

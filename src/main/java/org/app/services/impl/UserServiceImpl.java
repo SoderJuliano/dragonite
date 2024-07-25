@@ -13,6 +13,7 @@ import org.app.services.UserService;
 import org.app.utils.LocalLog;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -134,7 +135,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Login newLogin(Login login) throws BadRequestException {
+    public Login newLogin(Login login) throws BadRequestException, UnsupportedEncodingException {
         User user = userRepository.findById(login.userId()).orElseThrow(() -> {
             logErr(":negative User do not exist for " + login.email());
             return new BadRequestException("Can't do login");
