@@ -15,4 +15,6 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     @Query("{ 'contact.email' : ?0 }")
     Optional<User> findFirstByEmail(String email);
+
+    boolean existsById(String id);
 }

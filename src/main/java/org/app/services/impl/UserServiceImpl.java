@@ -1,7 +1,7 @@
 package org.app.services.impl;
 
-import com.mongodb.DuplicateKeyException;
 import org.apache.coyote.BadRequestException;
+import org.app.Exceptions.NoPasswordException;
 import org.app.Exceptions.NotFoundException;
 import org.app.model.Login;
 import org.app.model.UserRecord;
@@ -20,9 +20,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.app.utils.Commons.isNull;
 import static org.app.utils.GenericMapper.mapFields;
-import static org.app.utils.LocalLog.*;
+import static org.app.utils.LocalLog.log;
+import static org.app.utils.LocalLog.logErr;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -112,10 +112,15 @@ public class UserServiceImpl implements UserService {
             logins = loginRepository.findByUserIdAndPasswordAndEmail(login.userId(), login.password(), login.email());
         }
 
-        if (logins.isEmpty()) {
+        boolean userExists = userRepository.existsById(login.userId());
+        if (logins.isEmpty() && !userExists) {
             logErr(":negative Login not found for user " + login.email());
             throw new BadRequestException("No matching user found.");
-        }else {
+        }else if (logins.isEmpty()) {
+            log(":laugh The user exist but has no password");
+            throw new NoPasswordException("Need register a password first");
+        }
+        else {
             LocalLog.log(":positive Login sucessfully for user " + login.email());
         }
 
