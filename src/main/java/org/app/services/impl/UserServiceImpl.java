@@ -1,5 +1,6 @@
 package org.app.services.impl;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.coyote.BadRequestException;
 import org.app.Exceptions.NoPasswordException;
 import org.app.Exceptions.NotFoundException;
@@ -112,7 +113,18 @@ public class UserServiceImpl implements UserService {
             logins = loginRepository.findByUserIdAndPasswordAndEmail(login.userId(), login.password(), login.email());
         }
 
+        boolean hasActivationCode = userRepository.existsByActivationCodeAndId(login.password(), login.userId());
+
+        if(hasActivationCode) {
+            log(":laugh User loged in with activation code " + login.email());
+            return userRepository.findById(login.userId()).orElseThrow(() -> {
+                logErr(":warning Login failed for user " + login.email() + ". Data not found in users collection.");
+                return new BadRequestException("Can't do login");
+            });
+        }
+
         boolean userExists = userRepository.existsById(login.userId());
+
         if (logins.isEmpty() && !userExists) {
             logErr(":negative Login not found for user " + login.email());
             throw new BadRequestException("No matching user found.");
@@ -197,7 +209,39 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("User cant be actived");
         }
         user.setActived(true);
+        user.setActivationCode(null);
         return new DefaultAnswer(userRepository.save(user));
+    }
+
+    @Override
+    public DefaultAnswer recoverPassword(String id) {
+        Optional<User> optionalUser = userRepository.findById(id);
+        if (optionalUser.isEmpty() || optionalUser.get().getContact().email().isEmpty()) {
+            logErr(":negative User not found for id "+ id);
+            throw new NoPasswordException("User cannot recover password");
+        }
+
+        String newPasswordToken = RandomStringUtils.randomAlphanumeric(10);
+        String email = optionalUser.get().getContact().email().get(0);
+        String newMessage = "Dear User,<br><br>" +
+        "We have received a request to reset your password. Please follow the instructions below to complete the process:<br><br>" +
+        "1. Click on the following link to reset your password:<br><a href=\"https://custom-cv-online.netlify.app/recover/password?newPasswordToken={{newPasswordToken}}\">Reset Password</a><br><br>" +
+        "2. If you prefer, you can also log in with the token provided below and change your password later in the loginList preferences section:<br><br>" +
+        "Token: {{newPasswordToken}}<br><br>" +
+        "If you did not request a password reset, please ignore this email and your password will remain unchanged.<br><br>" +
+        "Best regards,<br>" +
+        "The Custom CV Online Team";
+
+        String filledMessage = newMessage.replace("{{newPasswordToken}}", newPasswordToken);
+        boolean success = twoStepService.sendHtmlEmail(email, "Reset Password", filledMessage);
+        if(!success) {
+            logErr(":lock Failed to send password reset email to user "+email);
+            throw new org.app.Exceptions.BadRequestException("Cannot reset password");
+        }
+        optionalUser.get().setActivationCode(newPasswordToken);
+        userRepository.save(optionalUser.get());
+        log(":smile Sent password reset email to user "+email);
+        return new DefaultAnswer("New password reset sent to e-mail successfully, and token saved to reset password");
     }
 
 

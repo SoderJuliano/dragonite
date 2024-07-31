@@ -6,7 +6,9 @@ import org.app.model.UserRecord;
 import org.app.model.common.DefaultAnswer;
 import org.app.model.entity.User;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 
 public interface UserService {
 
@@ -25,4 +27,6 @@ public interface UserService {
     boolean userExistByNameAndEmail(String name, String email);
 
     DefaultAnswer activateUserById(String id, String code) throws BadRequestException;
+
+    DefaultAnswer recoverPassword(String id);
 }

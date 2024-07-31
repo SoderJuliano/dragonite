@@ -60,4 +60,9 @@ public class UserController {
     public ResponseEntity<DefaultAnswer> activateUser(@PathVariable String id, @PathVariable String code) throws BadRequestException {
         return ResponseEntity.status(200).body(userService.activateUserById(id, code));
     }
+
+    @PutMapping(path = "/recover/{id}/password")
+    public ResponseEntity<DefaultAnswer> recoverPassword(@PathVariable String id) {
+        return ResponseEntity.status(200).body(userService.recoverPassword(id));
+    }
 }

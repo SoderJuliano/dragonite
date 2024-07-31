@@ -5,12 +5,11 @@ import org.app.utils.LocalLog;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.net.URI;
+import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.io.UnsupportedEncodingException;
 
@@ -78,6 +77,36 @@ public class TwoStepServiceImpl implements TwoStepService {
         }
     }
 
+    public boolean sendHtmlEmail(String email, String subject, String htmlContent) {
+        String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
+        String encodedSubject = URLEncoder.encode(subject, StandardCharsets.UTF_8);
+        String encodedHtmlContent = URLEncoder.encode(htmlContent, StandardCharsets.UTF_8);
+
+        try {
+            String jsonInputString = "{"
+                    + "\"email\": \"" + encodedEmail + "\","
+                    + "\"subject\": \"" + encodedSubject + "\","
+                    + "\"htmlContent\": \"" + encodedHtmlContent + "\""
+                    + "}";
+
+            HttpClient client = HttpClient.newHttpClient();
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(new URI("https://abra-api.top/email/send-email/html"))
+                    .header("Accept", "*/*")
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonInputString))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        }catch (Exception e) {
+            String err = notEmpty(e.getMessage())? e.getMessage() : "";
+            log(":bug Exception during sending HTML email to: "+email+". Exception: "+err);
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
 
     private HttpRequest mountAbraRequest(String requestBody) {
         return HttpRequest.newBuilder()
