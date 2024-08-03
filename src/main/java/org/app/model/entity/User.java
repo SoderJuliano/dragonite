@@ -26,6 +26,7 @@ public class User {
     private Contact contact;
     private boolean actived = false;
     private String activationCode = "";
+    private String deleteToken = "";
 
     // Constructors
     public User() {
@@ -158,6 +159,17 @@ public class User {
 
     public void setActived(boolean actived) {
         this.actived = actived;
+    }
+
+    public void setDeteToken(String token) {
+        this.deleteToken = token;
+    }
+
+    public boolean equalsDeleteToken(String token) {
+        if (isEmpty(token)) {
+            return false;
+        }
+        return isTheSame(this.deleteToken, token)
     }
 
     // Equals and HashCode

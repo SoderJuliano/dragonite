@@ -244,6 +244,68 @@ public class UserServiceImpl implements UserService {
         return new DefaultAnswer("New password reset sent to e-mail successfully, and token saved to reset password");
     }
 
+    @Override
+    public DefaultAnswer requestDelete(String id) {
+        log(":trash A request to delete data from id " + id + "begun");
+        List<Login> logins = loginRepository.findByUserId(id);
+        
+        if (logins.isEmpty()) {
+            logErr(":negative Login not found for user " + login.email());
+            throw new BadRequestException("No matching user found.");
+        }
+        
+        Login login = logins.get(0);
+        String key = login.email()+login.userId();
+
+        Optional<User> optionalUser = userRepository.findById(id);
+        User user = null;
+        if (optionalUser.isEmpty() || optionalUser.get().getContact().email().isEmpty()) {
+            logErr(":negative User not found for id "+ id);
+            throw new NoPasswordException("User cannot recover password");
+        }else {
+            user = optionalUser.get();
+        }
+
+        String token = RandomStringUtils.randomAlphanumeric(10);
+        user.setDeteToken(token);
+        userRepository.save(user);
+
+        boolean success = twoStepService.sendMessage(
+            login.email(), 
+            "Copie e cole esse token no campo do poup up/Copy and paste this token in the poup up field: "+token,
+            "Token de confirmação/Confirmation token", 
+            key
+        );
+
+        if(!success) {
+            logErr(":lock Failed to send delete token to user "+email);
+            throw new org.app.Exceptions.BadRequestException("Cannot delete account");
+        }
+
+        return new DefaultAnswer("Deletion token saved");
+    }
+
+    public DefaultAnswer requestDoDelete(String id, String token) {
+        log(":trash Started delete user id "+id);
+        
+        Optional<User> optionalUser = userRepository.findById(id);
+        User user = null;
+        
+        if (optionalUser.isEmpty() || optionalUser.get().getContact().email().isEmpty()) {
+            logErr(":negative User not found for id "+ id);
+            throw new NoPasswordException("User cannot recover password");
+        }else {
+            user = optionalUser.get();
+        }
+
+        if (!user.equalsDeleteToken(token)) {
+            logErr(":lock Tryied delete user (id: " + id + ") with an invalid token");
+            throw new BadRequestException("Invalid token");
+        }
+
+        userRepository.deleteById(id);
+        return new DefaultAnswer()
+;    }
 
     private User getUserbyId(String id) {
         Optional<User> userOptional = userRepository.findById(id);

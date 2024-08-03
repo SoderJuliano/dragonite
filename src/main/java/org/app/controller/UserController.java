@@ -65,4 +65,14 @@ public class UserController {
     public ResponseEntity<DefaultAnswer> recoverPassword(@PathVariable String id) {
         return ResponseEntity.status(200).body(userService.recoverPassword(id));
     }
+
+    @PatchMapping(path = "/request/{id}/delete")
+    public ResponseEntity<DefaultAnswer> requestDelete(@PathVariable String id) {
+        return ResponseEntity.status(200).body(userService.requestDelete(id));
+    }
+
+    @DeleteMapping(path = "/delete/{id}/{token}")
+    public ResponseEntity<DefaultAnswer> requestDoDelete(@PathVariable String id, @PathVariable String token) {
+        return ResponseEntity.status(200).body(userService.doRequestDelete(id, token));
+    }
 }

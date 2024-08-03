@@ -24,9 +24,13 @@ public interface UserService {
 
     public void updateUserName(String name, String email);
 
-    boolean userExistByNameAndEmail(String name, String email);
+    public boolean userExistByNameAndEmail(String name, String email);
 
-    DefaultAnswer activateUserById(String id, String code) throws BadRequestException;
+    public DefaultAnswer activateUserById(String id, String code) throws BadRequestException;
 
-    DefaultAnswer recoverPassword(String id);
+    public DefaultAnswer recoverPassword(String id);
+
+    public DefaultAnswer requestDelete(String id);
+
+    public DefaultAnswer requestDoDelete(String id, String token);
 }
