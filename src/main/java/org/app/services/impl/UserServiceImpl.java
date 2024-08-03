@@ -251,7 +251,7 @@ public class UserServiceImpl implements UserService {
         
         if (logins.isEmpty()) {
             logErr(":negative Login not found for user id " + id);
-            throw new BadRequestException("No matching user found.");
+            throw new org.app.Exceptions.BadRequestException("No matching user found.");
         }
         
         Login login = logins.get(0);
@@ -285,7 +285,7 @@ public class UserServiceImpl implements UserService {
         return new DefaultAnswer("Deletion token saved");
     }
 
-    public DefaultAnswer requestDoDelete(String id, String token) {
+    public DefaultAnswer doRequestDelete(String id, String token) {
         log(":trash Started delete user id "+id);
         
         Optional<User> optionalUser = userRepository.findById(id);
@@ -300,14 +300,14 @@ public class UserServiceImpl implements UserService {
 
         if (!user.equalsDeleteToken(token)) {
             logErr(":lock Tryied delete user (id: " + id + ") with an invalid token");
-            throw new BadRequestException("Invalid token");
+            throw new org.app.Exceptions.BadRequestException("Invalid token");
         }
 
         userRepository.deleteById(id);
         log(":positive Deleted user "+id);
         
-        return new DefaultAnswer()
-;    }
+        return new DefaultAnswer();
+    }
 
     private User getUserbyId(String id) {
         Optional<User> userOptional = userRepository.findById(id);

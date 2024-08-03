@@ -18,6 +18,10 @@ public record DefaultAnswer(Boolean valid, Integer status, String message, List<
         this(null, null, null, null, content, null);
     }
 
+    public DefaultAnswer() {
+        this(null, null, null, null, null, null);
+    }
+
     public DefaultAnswer  {
         if (content instanceof Exception ex) {
             valid = false;

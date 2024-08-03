@@ -32,5 +32,5 @@ public interface UserService {
 
     public DefaultAnswer requestDelete(String id);
 
-    public DefaultAnswer requestDoDelete(String id, String token);
+    public DefaultAnswer doRequestDelete(String id, String token);
 }
