@@ -278,7 +278,7 @@ public class UserServiceImpl implements UserService {
         );
 
         if(!success) {
-            logErr(":lock Failed to send delete token to user "+email);
+            logErr(":lock Failed to send delete token to user "+login.email());
             throw new org.app.Exceptions.BadRequestException("Cannot delete account");
         }
 
