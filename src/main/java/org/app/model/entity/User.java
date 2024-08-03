@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 import java.util.Objects;
+import static org.app.utils.Commons.isEmpty;
 
 @Document(collection = "user")
 public class User {

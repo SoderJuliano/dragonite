@@ -249,7 +249,7 @@ public class UserServiceImpl implements UserService {
         log(":trash A request to delete data from id " + id + "begun");
         List<Login> logins = loginRepository.findByUserId(id);
         
-        if (logins == null || logins.size() == 0) {
+        if (logins.isEmpty()) {
             logErr(":negative Login not found for user " + login.email());
             throw new BadRequestException("No matching user found.");
         }
@@ -305,7 +305,7 @@ public class UserServiceImpl implements UserService {
 
         userRepository.deleteById(id);
         log(":positive Deleted user "+id);
-
+        
         return new DefaultAnswer()
 ;    }
 
