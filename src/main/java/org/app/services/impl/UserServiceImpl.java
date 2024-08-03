@@ -250,7 +250,7 @@ public class UserServiceImpl implements UserService {
         List<Login> logins = loginRepository.findByUserId(id);
         
         if (logins.isEmpty()) {
-            logErr(":negative Login not found for user " + login.email());
+            logErr(":negative Login not found for user id " + id);
             throw new BadRequestException("No matching user found.");
         }
         
