@@ -169,7 +169,7 @@ public class User {
         if (isEmpty(token)) {
             return false;
         }
-        return isTheSame(this.deleteToken, token)
+        return isTheSame(this.deleteToken, token);
     }
 
     // Equals and HashCode
