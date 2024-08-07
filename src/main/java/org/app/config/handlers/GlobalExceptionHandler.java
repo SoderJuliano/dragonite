@@ -1,6 +1,7 @@
 package org.app.config.handlers;
 
 import com.mongodb.DuplicateKeyException;
+import org.app.Exceptions.BadRequestException;
 import org.app.Exceptions.NotFoundException;
 import org.app.Exceptions.UnauthorizedException;
 import org.app.model.common.DefaultAnswer;
@@ -44,5 +45,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     public ResponseEntity<Object> handleDuplicateKeyException(DuplicateKeyException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT.value()).body(new DefaultAnswer(ex));
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<String> handleBadRequestException(BadRequestException exception) {
+        LocalLog.logErr(":lock "+ exception.getMessage());
+        Map<String, String> errors = new HashMap<>();
+        errors.put("message", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(parseEmojis(":lock "+ exception.getMessage()));
     }
 }

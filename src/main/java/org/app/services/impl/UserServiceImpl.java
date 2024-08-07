@@ -1,7 +1,7 @@
 package org.app.services.impl;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.coyote.BadRequestException;
+import org.app.Exceptions.BadRequestException;
 import org.app.Exceptions.NoPasswordException;
 import org.app.Exceptions.NotFoundException;
 import org.app.model.Login;
@@ -40,7 +40,7 @@ public class UserServiceImpl implements UserService {
         this.twoStepService = twoStepService;
     }
 
-    public User newUser(UserRecord userRecord) throws BadRequestException {
+    public User newUser(UserRecord userRecord) {
         if(userRecord.contact() == null || userRecord.contact().email().isEmpty()) {
             logErr(":virus no email found in the payload");
             throw new IllegalArgumentException("Must have at list one email to save data into database");
@@ -102,7 +102,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User login(Login login) throws BadRequestException {
+    public User login(Login login) {
         LocalLog.log(":loz Trying login for " + login.email());
 
         List<Login> logins;
@@ -152,7 +152,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Login newLogin(Login login) throws BadRequestException, UnsupportedEncodingException {
+    public Login newLogin(Login login) throws UnsupportedEncodingException {
         User user = userRepository.findById(login.userId()).orElseThrow(() -> {
             logErr(":negative User do not exist for " + login.email());
             return new BadRequestException("Can't do login");
@@ -236,7 +236,7 @@ public class UserServiceImpl implements UserService {
         boolean success = twoStepService.sendHtmlEmail(email, "Reset Password", filledMessage);
         if(!success) {
             logErr(":lock Failed to send password reset email to user "+email);
-            throw new org.app.Exceptions.BadRequestException("Cannot reset password");
+            throw new BadRequestException("Cannot reset password");
         }
         optionalUser.get().setActivationCode(newPasswordToken);
         userRepository.save(optionalUser.get());
@@ -246,12 +246,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public DefaultAnswer requestDelete(String id) {
-        log(":trash A request to delete data from id " + id + "begun");
+        log(":trash A request to delete data from id " + id + " begun");
         List<Login> logins = loginRepository.findByUserId(id);
         
         if (logins.isEmpty()) {
             logErr(":negative Login not found for user id " + id);
-            throw new org.app.Exceptions.BadRequestException("No matching user found.");
+            throw new BadRequestException("No matching user found.");
         }
         
         Login login = logins.get(0);

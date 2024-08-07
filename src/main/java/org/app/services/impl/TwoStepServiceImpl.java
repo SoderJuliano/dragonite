@@ -35,7 +35,8 @@ public class TwoStepServiceImpl implements TwoStepService {
                     HttpResponse.BodyHandlers.ofString());
             log(":email Abra response status code: " + response.statusCode() + " for email: " + email + " with key: " + key);
             log("email Response body: " + response.body());
-        } catch (IOException | InterruptedException e) {
+            return response.statusCode() == 200 || response.statusCode() == 201;
+        } catch (Exception e) {
             LocalLog.logErr(":bug Failed to send email to: " + email + " with key: " + key + " due to: " + e.getMessage());
             e.printStackTrace();
         }

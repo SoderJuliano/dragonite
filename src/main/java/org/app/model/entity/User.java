@@ -27,15 +27,15 @@ public class User {
     private String realImg;
     private Contact contact;
     private boolean actived = false;
-    private String activationCode = "";
-    private String deleteToken = "";
+    private String activationCode;
+    private String deleteToken;
 
     // Constructors
     public User() {
     }
 
     public User(String _id, int id, String name, String profession, String resume, List<String> competence,
-                List<String> social, List<String> grade, String ability, String avatarImg, String realImg, Contact contact) {
+                List<String> social, List<String> grade, String ability, String avatarImg, String realImg, Contact contact, String deleteToken) {
         this._id = _id;
         this.id = id;
         this.name = name;
@@ -48,6 +48,7 @@ public class User {
         this.avatarImg = avatarImg;
         this.realImg = realImg;
         this.contact = contact;
+        this.deleteToken = deleteToken;
     }
 
     // Getters and Setters
