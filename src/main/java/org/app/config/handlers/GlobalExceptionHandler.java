@@ -2,6 +2,7 @@ package org.app.config.handlers;
 
 import com.mongodb.DuplicateKeyException;
 import org.app.Exceptions.BadRequestException;
+import org.app.Exceptions.NoPasswordException;
 import org.app.Exceptions.NotFoundException;
 import org.app.Exceptions.UnauthorizedException;
 import org.app.model.common.DefaultAnswer;
@@ -53,5 +54,11 @@ public class GlobalExceptionHandler {
         Map<String, String> errors = new HashMap<>();
         errors.put("message", exception.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(parseEmojis(":lock "+ exception.getMessage()));
+    }
+
+    @ExceptionHandler(NoPasswordException.class)
+    public ResponseEntity<DefaultAnswer> handleNoPasswordException(NoPasswordException exception) {
+        LocalLog.logErr(":lock "+ exception.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT.value()).body(new DefaultAnswer(exception));
     }
 }

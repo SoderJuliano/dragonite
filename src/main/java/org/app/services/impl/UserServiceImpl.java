@@ -206,10 +206,11 @@ public class UserServiceImpl implements UserService {
         if(user.isActived() && !Objects.equals(user.getActivationCode(), code)) {
             logErr(":lock User can't be actived due conditions, actived: "+user.isActived()+" code mathes: "
                     +Objects.equals(user.getActivationCode(), code));
-            throw new BadRequestException("User cant be actived");
+            throw new BadRequestException("User cant be actived or already been activated");
         }
         user.setActived(true);
         user.setActivationCode(null);
+        log(":star Activated account succesfully for user "+id);
         return new DefaultAnswer(userRepository.save(user));
     }
 
@@ -247,8 +248,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public DefaultAnswer requestDelete(String id) {
         log(":trash A request to delete data from id " + id + " begun");
-        List<Login> logins = loginRepository.findByUserId(id);
-        
+
+        Optional<User> optionalUser = userRepository.findById(id);
+
+        User user = null;
+        if (optionalUser.isEmpty() || optionalUser.get().getContact().email().isEmpty()) {
+            logErr(":negative User not found for id "+ id);
+            throw new NoPasswordException("User cannot recover password");
+        }else {
+            user = optionalUser.get();
+        }
+
+        List<Login> logins = loginRepository.findByEmail(user.getContact().email());
+
         if (logins.isEmpty()) {
             logErr(":negative Login not found for user id " + id);
             throw new BadRequestException("No matching user found.");
@@ -257,14 +269,7 @@ public class UserServiceImpl implements UserService {
         Login login = logins.get(0);
         String key = login.email()+login.userId();
 
-        Optional<User> optionalUser = userRepository.findById(id);
-        User user = null;
-        if (optionalUser.isEmpty() || optionalUser.get().getContact().email().isEmpty()) {
-            logErr(":negative User not found for id "+ id);
-            throw new NoPasswordException("User cannot recover password");
-        }else {
-            user = optionalUser.get();
-        }
+
 
         String token = RandomStringUtils.randomAlphanumeric(10);
         user.setDeteToken(token);
@@ -301,6 +306,14 @@ public class UserServiceImpl implements UserService {
         if (!user.equalsDeleteToken(token)) {
             logErr(":lock Tryied delete user (id: " + id + ") with an invalid token");
             throw new org.app.Exceptions.BadRequestException("Invalid token");
+        }
+
+        List<Login> logins = loginRepository.findByEmail(user.getContact().email());
+        if(logins.isEmpty()) {
+            logErr(":negative Login not found for user id " + id);
+        }else {
+            loginRepository.deleteByUserId(user.get_id());
+            log(":fire Login deleted for user " + user.get_id());
         }
 
         userRepository.deleteById(id);
