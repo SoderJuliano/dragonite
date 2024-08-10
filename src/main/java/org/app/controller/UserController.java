@@ -56,9 +56,10 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping(path = "/activate/{id}/{code}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<DefaultAnswer> activateUser(@PathVariable String id, @PathVariable String code) throws BadRequestException {
-        return ResponseEntity.status(200).body(userService.activateUserById(id, code));
+    @PatchMapping(path = "/activate/{id}/{code}/{email}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<DefaultAnswer> activateUser(
+            @PathVariable String id, @PathVariable String code, @PathVariable String email) throws BadRequestException {
+        return ResponseEntity.status(200).body(userService.activateUserById(id, code, email));
     }
 
     @PutMapping(path = "/recover/{id}/password")
@@ -66,9 +67,9 @@ public class UserController {
         return ResponseEntity.status(200).body(userService.recoverPassword(id));
     }
 
-    @PatchMapping(path = "/request/{id}/delete")
-    public ResponseEntity<DefaultAnswer> requestDelete(@PathVariable String id) {
-        return ResponseEntity.status(200).body(userService.requestDelete(id));
+    @PatchMapping(path = "/request/{id}/{email}/delete")
+    public ResponseEntity<DefaultAnswer> requestDelete(@PathVariable String id, @PathVariable String email) {
+        return ResponseEntity.status(200).body(userService.requestDelete(id, email));
     }
 
     @DeleteMapping(path = "/delete/{id}/{token}")

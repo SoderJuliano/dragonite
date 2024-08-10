@@ -21,6 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.app.utils.Commons.isEmpty;
 import static org.app.utils.GenericMapper.mapFields;
 import static org.app.utils.LocalLog.log;
 import static org.app.utils.LocalLog.logErr;
@@ -201,8 +202,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public DefaultAnswer activateUserById(String id, String code) throws BadRequestException {
-        User user = getUserbyId(id);
+    public DefaultAnswer activateUserById(String id, String code, String email) {
+        User user = null;
+
+        if(isEmpty(id) || id.length() != 24) {
+            log(":warning Invalid id "+id+ " will try recover user with email "+email);
+            Optional<User> userByEmail = userRepository.findFirstByEmail(email);
+            if(userByEmail.isPresent()) {
+                log(":positive User found for email "+email);
+                user = userByEmail.get();
+            }
+        }
+
+        user = getUserbyId(id);
+
         if(user.isActived() && !Objects.equals(user.getActivationCode(), code)) {
             logErr(":lock User can't be actived due conditions, actived: "+user.isActived()+" code mathes: "
                     +Objects.equals(user.getActivationCode(), code));
@@ -246,44 +259,37 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public DefaultAnswer requestDelete(String id) {
+    public DefaultAnswer requestDelete(String id, String email) {
         log(":trash A request to delete data from id " + id + " begun");
 
-        Optional<User> optionalUser = userRepository.findById(id);
+        Optional<User> optionalUser = null;
+        optionalUser = userRepository.findById(id);
 
-        User user = null;
-        if (optionalUser.isEmpty() || optionalUser.get().getContact().email().isEmpty()) {
-            logErr(":negative User not found for id "+ id);
+        if (optionalUser.isEmpty()) {
+            log("warning user not found by id " + id + " will search user by email address " + email);
+            optionalUser = userRepository.findFirstByEmail(email);
+        } else if(optionalUser.get().getContact().email().isEmpty()) {
+            logErr(":negative User not found for id "+ id +" and user does not has e-mail.");
             throw new NoPasswordException("User cannot recover password");
-        }else {
-            user = optionalUser.get();
         }
 
-        List<Login> logins = loginRepository.findByEmail(user.getContact().email());
+        User user = optionalUser.get();
 
-        if (logins.isEmpty()) {
-            logErr(":negative Login not found for user id " + id);
-            throw new BadRequestException("No matching user found.");
-        }
-        
-        Login login = logins.get(0);
-        String key = login.email()+login.userId();
-
-
+        String key = email+id;
 
         String token = RandomStringUtils.randomAlphanumeric(10);
         user.setDeteToken(token);
         userRepository.save(user);
 
         boolean success = twoStepService.sendMessage(
-            login.email(), 
+             email,
             "Copie e cole esse token no campo do poup up/Copy and paste this token in the poup up field: "+token,
             "Token de confirmação/Confirmation token", 
             key
         );
 
         if(!success) {
-            logErr(":lock Failed to send delete token to user "+login.email());
+            logErr(":lock Failed to send delete token to user "+email);
             throw new org.app.Exceptions.BadRequestException("Cannot delete account");
         }
 

@@ -26,11 +26,11 @@ public interface UserService {
 
     public boolean userExistByNameAndEmail(String name, String email);
 
-    public DefaultAnswer activateUserById(String id, String code) throws BadRequestException;
+    public DefaultAnswer activateUserById(String id, String code, String email);
 
     public DefaultAnswer recoverPassword(String id);
 
-    public DefaultAnswer requestDelete(String id);
+    public DefaultAnswer requestDelete(String id, String email);
 
     public DefaultAnswer doRequestDelete(String id, String token);
 }
