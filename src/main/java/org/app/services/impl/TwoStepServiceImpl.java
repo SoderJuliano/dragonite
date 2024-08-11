@@ -50,7 +50,7 @@ public class TwoStepServiceImpl implements TwoStepService {
     }
 
     @Override
-    public boolean sendEmail(String email, String message, String subject) throws UnsupportedEncodingException {
+    public boolean sendEmail(String email, String message, String subject) {
 
         String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
         String encodedSubject = URLEncoder.encode("[en]Your confirmation token/[pt]Código de confirmação", StandardCharsets.UTF_8);

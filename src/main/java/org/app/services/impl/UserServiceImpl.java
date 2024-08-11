@@ -288,7 +288,13 @@ public class UserServiceImpl implements UserService {
             key
         );
 
-        if(!success) {
+        boolean emailSetnt = twoStepService.sendEmail(
+                email,
+                "Copie e cole esse token no campo do poup up/Copy and paste this token in the poup up field: "+token,
+                "Token de confirmação/Confirmation token"
+                );
+
+        if(!success && !emailSetnt) {
             logErr(":lock Failed to send delete token to user "+email);
             throw new org.app.Exceptions.BadRequestException("Cannot delete account");
         }
