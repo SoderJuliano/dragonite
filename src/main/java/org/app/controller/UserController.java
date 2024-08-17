@@ -6,6 +6,7 @@ import org.app.model.Login;
 import org.app.model.UserRecord;
 import org.app.model.common.DefaultAnswer;
 import org.app.services.UserService;
+import org.app.utils.LocalLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -50,7 +51,8 @@ public class UserController {
     @PatchMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateName(@RequestParam String name, @RequestParam String email) {
         if(userService.userExistByNameAndEmail(name, email)) {
-            return ResponseEntity.status(100).build();
+            LocalLog.log(":stone_face ignored");
+            return ResponseEntity.status(200).body("ignore");
         }
         userService.updateUserName(name, email);
         return ResponseEntity.ok().build();
