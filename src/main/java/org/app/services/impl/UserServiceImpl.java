@@ -137,12 +137,7 @@ public class UserServiceImpl implements UserService {
             LocalLog.log(":positive Login sucessfully for user " + login.email());
         }
 
-        Login foundLogin = logins.get(0);
-
-        User user = userRepository.findById(foundLogin.userId()).orElseThrow(() -> {
-            logErr(":warning Login failed for user " + login.email() + ". Data not found in users collection.");
-            return new BadRequestException("Can't do login");
-        });
+        User user = getUser(logins);
 
         if(!user.isActived()) {
             logErr(":lock Tried login without confirm email account for email "+user.getContact().email());
@@ -341,5 +336,21 @@ public class UserServiceImpl implements UserService {
             throw new NotFoundException("User not found");
         }
         return userOptional.get();
+    }
+
+    private User getUser(List<Login> logins) {
+        User user = null;
+        for (Login ilogin : logins) {
+            user = userRepository.findById(ilogin.userId()).orElse(null);
+            if (user != null) {
+                break;
+            }
+        }
+
+        if (user == null) {
+            logErr(":warning Login failed for user " + logins.get(0).email() + ". Data not found in users collection.");
+            throw new BadRequestException("Can't do login");
+        }
+        return user;
     }
 }
