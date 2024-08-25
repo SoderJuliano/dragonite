@@ -1,10 +1,12 @@
 package org.app.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.apache.coyote.BadRequestException;
 import org.app.model.Login;
 import org.app.model.UserRecord;
 import org.app.model.common.DefaultAnswer;
+import org.app.model.requests.NewPasswordRequest;
 import org.app.services.UserService;
 import org.app.utils.LocalLog;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,5 +79,10 @@ public class UserController {
     @DeleteMapping(path = "/delete/{id}/{token}")
     public ResponseEntity<DefaultAnswer> requestDoDelete(@PathVariable String id, @PathVariable String token) {
         return ResponseEntity.status(200).body(userService.doRequestDelete(id, token));
+    }
+
+    @PatchMapping(path = "/request/setPassword")
+    public ResponseEntity<DefaultAnswer> setPassword(@Valid @RequestBody NewPasswordRequest request) {
+        return ResponseEntity.status(200).body(userService.setPassword(request.id(), request.password(), request.token()));
     }
 }

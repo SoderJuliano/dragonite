@@ -33,4 +33,6 @@ public interface UserService {
     public DefaultAnswer requestDelete(String id, String email);
 
     public DefaultAnswer doRequestDelete(String id, String token);
+
+    DefaultAnswer setPassword(String id, String password, String token);
 }

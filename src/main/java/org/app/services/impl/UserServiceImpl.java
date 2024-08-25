@@ -329,6 +329,19 @@ public class UserServiceImpl implements UserService {
         return new DefaultAnswer();
     }
 
+    @Override
+    public DefaultAnswer setPassword(String id, String password, String token) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("User " + id + " does not exist"));
+        if(!user.getActivationCode().equals(token)) {
+            throw new BadRequestException("User " + id + "cannot change password");
+        }
+        Login login = loginRepository.findByUserId(user.get_id())
+                .orElseThrow(() -> new NotFoundException("User " + id + " does not exist"));
+        loginRepository.save(new Login(login._id(), login.email(), password, login.userId(), login.firstLogin(), login.lastLogin()));
+        return new DefaultAnswer("Password changed");
+    }
+
     private User getUserbyId(String id) {
         Optional<User> userOptional = userRepository.findById(id);
         if (userOptional.isEmpty()) {

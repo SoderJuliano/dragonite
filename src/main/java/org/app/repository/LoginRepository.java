@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface LoginRepository extends MongoRepository<Login, String> {
@@ -16,4 +17,6 @@ public interface LoginRepository extends MongoRepository<Login, String> {
     List<Login> findByEmail(List<String> email);
 
     void deleteByUserId(String id);
+
+    Optional<Login> findByUserId(String userId);
 }

@@ -20,7 +20,7 @@ import static org.app.utils.LocalLog.log;
 
 @Service
 public class TwoStepServiceImpl implements TwoStepService {
-    private HttpClient client = HttpClient.newHttpClient();
+    private final HttpClient client = HttpClient.newHttpClient();
     private final String abraHost = "https://abra-api.top";
 
     @Override
