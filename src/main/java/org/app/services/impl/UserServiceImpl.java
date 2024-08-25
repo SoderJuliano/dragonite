@@ -329,16 +329,27 @@ public class UserServiceImpl implements UserService {
         return new DefaultAnswer();
     }
 
+    /**
+     * Sets a new password for the user associated with the given ID and token.
+     *
+     * @param id The unique identifier of the user.
+     * @param password The new password to be set.
+     * @param token The token used to verify the user's identity.
+     * @return A {@link DefaultAnswer} object indicating the success of the operation.
+     * @throws NotFoundException If the user associated with the given ID does not exist.
+     * @throws BadRequestException If the user associated with the given ID cannot change password due to invalid token.
+     */
     @Override
     public DefaultAnswer setPassword(String id, String password, String token) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User " + id + " does not exist"));
         if(!user.getActivationCode().equals(token)) {
-            throw new BadRequestException("User " + id + "cannot change password");
+            throw new BadRequestException("User " + id + " cannot change password");
         }
         Login login = loginRepository.findByUserId(user.get_id())
                 .orElseThrow(() -> new NotFoundException("User " + id + " does not exist"));
         loginRepository.save(new Login(login._id(), login.email(), password, login.userId(), login.firstLogin(), login.lastLogin()));
+        log(":writing password changed for user " + user.get_id());
         return new DefaultAnswer("Password changed");
     }
 

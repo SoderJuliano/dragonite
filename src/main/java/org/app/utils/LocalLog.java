@@ -46,6 +46,6 @@ public class LocalLog {
     }
 
     public static String logTime() {
-        return parseEmojis(":time[" + dataTime() + "]:time ");
+        return parseEmojis(":arrow_right [" + dataTime() + "]:time ");
     }
 }
