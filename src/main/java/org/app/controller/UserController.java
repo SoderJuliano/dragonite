@@ -64,7 +64,7 @@ public class UserController {
         return ResponseEntity.status(200).body(userService.activateUserById(id, code, email));
     }
 
-    @PutMapping(path = "/recover/{id}/password")
+    @PatchMapping(path = "/recover/{id}/password")
     public ResponseEntity<DefaultAnswer> recoverPassword(@PathVariable String id) {
         return ResponseEntity.status(200).body(userService.recoverPassword(id));
     }

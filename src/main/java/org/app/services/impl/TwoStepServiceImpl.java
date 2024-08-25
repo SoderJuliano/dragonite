@@ -1,5 +1,7 @@
 package org.app.services.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.app.model.requests.AbraHtmlMessageEmailRequest;
 import org.app.services.TwoStepService;
 import org.app.utils.LocalLog;
 import org.springframework.stereotype.Service;
@@ -53,8 +55,15 @@ public class TwoStepServiceImpl implements TwoStepService {
     public boolean sendEmail(String email, String message, String subject) {
 
         String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
-        String encodedSubject = URLEncoder.encode("[en]Your confirmation token/[pt]Código de confirmação", StandardCharsets.UTF_8);
-        String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8);
+
+        String encodedMessage = message.replace(" ", "%20")
+                .replace("[", "%5B")
+                .replace("]", "%5D")
+                .replace("/", "%2F");
+        String encodedSubject = subject.replace(" ", "%20")
+                .replace("[", "%5B")
+                .replace("]", "%5D")
+                .replace("/", "%2F");
 
         String url = String.format("%s/email/send-email/%s/%s/%s", abraHost, encodedEmail, encodedMessage, encodedSubject);
 
@@ -79,16 +88,11 @@ public class TwoStepServiceImpl implements TwoStepService {
     }
 
     public boolean sendHtmlEmail(String email, String subject, String htmlContent) {
-        String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
-        String encodedSubject = URLEncoder.encode(subject, StandardCharsets.UTF_8);
-        String encodedHtmlContent = URLEncoder.encode(htmlContent, StandardCharsets.UTF_8);
-
         try {
-            String jsonInputString = "{"
-                    + "\"email\": \"" + encodedEmail + "\","
-                    + "\"subject\": \"" + encodedSubject + "\","
-                    + "\"htmlContent\": \"" + encodedHtmlContent + "\""
-                    + "}";
+            AbraHtmlMessageEmailRequest payload = new AbraHtmlMessageEmailRequest(email, subject, htmlContent);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonInputString = objectMapper.writeValueAsString(payload);
 
             HttpClient client = HttpClient.newHttpClient();
 
@@ -100,13 +104,13 @@ public class TwoStepServiceImpl implements TwoStepService {
                     .build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            return response.statusCode() == 200 || response.statusCode() == 201;
         }catch (Exception e) {
             String err = notEmpty(e.getMessage())? e.getMessage() : "";
             log(":bug Exception during sending HTML email to: "+email+". Exception: "+err);
             e.printStackTrace();
             return false;
         }
-        return true;
     }
 
     private HttpRequest mountAbraRequest(String requestBody) {
