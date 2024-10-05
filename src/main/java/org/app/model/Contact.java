@@ -1,7 +1,5 @@
 package org.app.model;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
-
 import java.util.List;
 
 public record Contact(
