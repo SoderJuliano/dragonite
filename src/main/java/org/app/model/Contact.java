@@ -7,11 +7,9 @@ import java.util.List;
 public record Contact(
         List<String> email,
         List<String> phone,
-        @JsonAlias("adressObject")
-        Address address,
-        @JsonAlias({"adress", "address"})
-        String adressAsString
+        AddressObject adressObject,
+        String address
 ) {}
 
-record Address(String country, String state, String city, String street, String number, String district) {
+record AddressObject(String country, String state, String city, String street, String number, String district) {
 }
