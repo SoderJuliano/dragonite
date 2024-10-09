@@ -1,6 +1,5 @@
 package org.app.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import org.app.model.Contact;
 import org.app.model.UserExperiences;
 import org.springframework.data.annotation.Id;
@@ -31,7 +30,7 @@ public class User {
     private boolean actived = false;
     private String activationCode;
     private String deleteToken;
-    private List<UserExperiences> experiences = new ArrayList<UserExperiences>();
+    private List<UserExperiences> userExperiences = new ArrayList<UserExperiences>();
 
     // Constructors
     public User() {
@@ -53,7 +52,7 @@ public class User {
         this.realImg = realImg;
         this.contact = contact;
         this.deleteToken = deleteToken;
-        this.experiences = experiences;
+        this.userExperiences = experiences;
     }
 
     // Getters and Setters
@@ -202,12 +201,12 @@ public class User {
         this.deleteToken = deleteToken;
     }
 
-    public List<UserExperiences> getExperiences() {
-        return experiences;
+    public List<UserExperiences> getUserExperiences() {
+        return userExperiences;
     }
 
-    public void setExperiences(List<UserExperiences> experiences) {
-        this.experiences = experiences;
+    public void setUserExperiences(List<UserExperiences> userExperiences) {
+        this.userExperiences = userExperiences;
     }
 
     @Override
@@ -228,7 +227,7 @@ public class User {
                 ", actived=" + actived +
                 ", activationCode='" + activationCode + '\'' +
                 ", deleteToken='" + deleteToken + '\'' +
-                ", experiences=" + experiences +
+                ", experiences=" + userExperiences +
                 '}';
     }
 }

@@ -97,7 +97,7 @@ public class UserServiceImpl implements UserService {
         userToUpdate.setAvatarImg(userRecord.avatarImg());
         userToUpdate.setRealImg(userRecord.realImg());
         userToUpdate.setContact(userRecord.contact());
-        userToUpdate.setE
+        userToUpdate.setUserExperiences(userRecord.userExperiences());
 
         LocalLog.log(":positive Updating user, name: " + userToUpdate.getName() + ", email: " + userToUpdate.getContact().email().get(0));
         return userRepository.save(userToUpdate);
