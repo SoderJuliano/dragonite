@@ -2,9 +2,11 @@ package org.app.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import org.app.model.Contact;
+import org.app.model.UserExperiences;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import static org.app.utils.Commons.isEmpty;
@@ -29,13 +31,15 @@ public class User {
     private boolean actived = false;
     private String activationCode;
     private String deleteToken;
+    private List<UserExperiences> experiences = new ArrayList<UserExperiences>();
 
     // Constructors
     public User() {
     }
 
     public User(String _id, int id, String name, String profession, String resume, List<String> competence,
-                List<String> social, List<String> grade, String ability, String avatarImg, String realImg, Contact contact, String deleteToken) {
+                List<String> social, List<String> grade, String ability, String avatarImg, String realImg,
+                Contact contact, String deleteToken, List<UserExperiences> experiences) {
         this._id = _id;
         this.id = id;
         this.name = name;
@@ -49,6 +53,7 @@ public class User {
         this.realImg = realImg;
         this.contact = contact;
         this.deleteToken = deleteToken;
+        this.experiences = experiences;
     }
 
     // Getters and Setters
@@ -189,6 +194,22 @@ public class User {
         return Objects.hash(_id, id);
     }
 
+    public String getDeleteToken() {
+        return deleteToken;
+    }
+
+    public void setDeleteToken(String deleteToken) {
+        this.deleteToken = deleteToken;
+    }
+
+    public List<UserExperiences> getExperiences() {
+        return experiences;
+    }
+
+    public void setExperiences(List<UserExperiences> experiences) {
+        this.experiences = experiences;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -204,6 +225,10 @@ public class User {
                 ", avatarImg='" + avatarImg + '\'' +
                 ", realImg='" + realImg + '\'' +
                 ", contact=" + contact +
+                ", actived=" + actived +
+                ", activationCode='" + activationCode + '\'' +
+                ", deleteToken='" + deleteToken + '\'' +
+                ", experiences=" + experiences +
                 '}';
     }
 }
