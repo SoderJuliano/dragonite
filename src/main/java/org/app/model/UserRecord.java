@@ -20,9 +20,10 @@ public record UserRecord(
         String realImg,
         Contact contact,
         ArrayList<String> otherInfos,
-        OtherExperiencies otherExperiencies
+        OtherExperiencies otherExperiencies,
+        List<UserExperiences> userExperiences
 ){
         public UserRecord() {
-                this(null, null, null, null, null, null, null, null, null, null, null, null, null);
+                this(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         }
 }
