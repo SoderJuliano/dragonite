@@ -126,6 +126,8 @@ public class UserServiceImpl implements UserService {
         }
 
         boolean userExists = userRepository.existsById(login.userId());
+        boolean existsByEmailAndLanguage = userRepository.findFirstByEmailAndLanguage(login.email(), login.language()).isPresent();
+        userExists = userExists || existsByEmailAndLanguage;
 
         if (logins.isEmpty() && !userExists) {
             logErr(":negative Login not found for user " + login.email());

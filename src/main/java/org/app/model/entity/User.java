@@ -1,6 +1,7 @@
 package org.app.model.entity;
 
 import org.app.model.Contact;
+import org.app.model.OtherExperiencies;
 import org.app.model.SpokenLanguages;
 import org.app.model.UserExperiences;
 import org.springframework.data.annotation.Id;
@@ -34,10 +35,12 @@ public class User {
     private String activationCode;
     private String deleteToken;
     private List<UserExperiences> userExperiences = new ArrayList<UserExperiences>();
+    private OtherExperiencies otherExperiencies;
     private String language;
     List<SpokenLanguages> spokenLanguages;
     LocalDateTime lastUpdated;
     LocalDateTime createdDate;
+    ArrayList<String> otherInfos;
 
     // Constructors
     public User() {
@@ -200,8 +203,24 @@ public class User {
         this.spokenLanguages = spokenLanguages;
     }
 
+    public OtherExperiencies getOtherExperiencies() {
+        return otherExperiencies;
+    }
+
+    public void setOtherExperiencies(OtherExperiencies otherExperiencies) {
+        this.otherExperiencies = otherExperiencies;
+    }
+
     public LocalDateTime getLastUpdated() {
         return lastUpdated;
+    }
+
+    public ArrayList<String> getOtherInfos() {
+        return otherInfos;
+    }
+
+    public void setOtherInfos(ArrayList<String> otherInfos) {
+        this.otherInfos = otherInfos;
     }
 
     public void setLastUpdatedToNow() {
