@@ -22,15 +22,15 @@ public interface UserService {
 
     public Login newLogin(Login login) throws BadRequestException, UnsupportedEncodingException;
 
-    public void updateUserName(String name, String email);
+    public void updateUserName(String name, String email, String language);
 
-    public boolean userExistByNameAndEmail(String name, String email);
+    public boolean userExistByNameAndEmail(String name, String email, String language);
 
-    public DefaultAnswer activateUserById(String id, String code, String email);
+    public DefaultAnswer activateUserById(String id, String code, String email, String language);
 
     public DefaultAnswer recoverPassword(String id);
 
-    public DefaultAnswer requestDelete(String id, String email);
+    public DefaultAnswer requestDelete(String id, String email, String language);
 
     public DefaultAnswer doRequestDelete(String id, String token);
 

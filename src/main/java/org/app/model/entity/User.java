@@ -1,10 +1,13 @@
 package org.app.model.entity;
 
 import org.app.model.Contact;
+import org.app.model.SpokenLanguages;
 import org.app.model.UserExperiences;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -31,6 +34,10 @@ public class User {
     private String activationCode;
     private String deleteToken;
     private List<UserExperiences> userExperiences = new ArrayList<UserExperiences>();
+    private String language;
+    List<SpokenLanguages> spokenLanguages;
+    LocalDateTime lastUpdated;
+    LocalDateTime createdDate;
 
     // Constructors
     public User() {
@@ -38,7 +45,8 @@ public class User {
 
     public User(String _id, int id, String name, String profession, String resume, List<String> competence,
                 List<String> social, List<String> grade, String ability, String avatarImg, String realImg,
-                Contact contact, String deleteToken, List<UserExperiences> experiences) {
+                Contact contact, String deleteToken, List<UserExperiences> experiences, String language,
+                List<SpokenLanguages> spokenLanguages) {
         this._id = _id;
         this.id = id;
         this.name = name;
@@ -53,6 +61,10 @@ public class User {
         this.contact = contact;
         this.deleteToken = deleteToken;
         this.userExperiences = experiences;
+        this.language = language;
+        this.spokenLanguages = spokenLanguages;
+        ZoneId timeZone = ZoneId.of("America/Sao_Paulo");
+        this.createdDate = LocalDateTime.now(timeZone);
     }
 
     // Getters and Setters
@@ -170,6 +182,31 @@ public class User {
 
     public void setDeteToken(String token) {
         this.deleteToken = token;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public List<SpokenLanguages> getSpokenLanguages() {
+        return spokenLanguages;
+    }
+
+    public void setSpokenLanguages(List<SpokenLanguages> spokenLanguages) {
+        this.spokenLanguages = spokenLanguages;
+    }
+
+    public LocalDateTime getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setLastUpdatedToNow() {
+        ZoneId timeZone = ZoneId.of("America/Sao_Paulo");
+        this.lastUpdated = LocalDateTime.now(timeZone);
     }
 
     public boolean equalsDeleteToken(String token) {

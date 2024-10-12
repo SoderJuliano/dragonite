@@ -21,9 +21,11 @@ public record UserRecord(
         Contact contact,
         ArrayList<String> otherInfos,
         OtherExperiencies otherExperiencies,
-        List<UserExperiences> userExperiences
+        List<UserExperiences> userExperiences,
+        String language,
+        List<SpokenLanguages> spokenLanguages
 ){
         public UserRecord() {
-                this(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+                this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         }
 }

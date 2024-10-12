@@ -53,7 +53,11 @@ public class UserServiceImpl implements UserService {
         }
         User newUser = new User();
         try {
-            userRepository.findByNameAndAnyEmail(userRecord.name(), userRecord.contact().email()).ifPresent(u -> {
+            userRepository.findByNameAndAnyEmailAndLanguage(
+                    userRecord.name(),
+                    userRecord.contact().email(),
+                    userRecord.language()
+            ).ifPresent(u -> {
                 logErr(":negative This user already exist");
                 throw new IllegalArgumentException("User already exists");
             });
@@ -74,7 +78,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User updateUser(UserRecord userRecord) throws BadRequestException {
-        User userToUpdate = userRepository.findByNameAndAnyEmail(userRecord.name(), userRecord.contact().email())
+        User userToUpdate = userRepository.findByNameAndAnyEmailAndLanguage(
+                    userRecord.name(),
+                    userRecord.contact().email(),
+                    userRecord.language()
+                )
                 .orElseThrow(
                         () -> {
                             logErr(":negative User not found during update. User's name: " + userRecord.name() + " user's email: " +
@@ -87,17 +95,9 @@ public class UserServiceImpl implements UserService {
             logErr(":lock Tried update user without confirm email account for email "+userRecord.contact().email());
             throw new BadRequestException("User did not confirm email account");
         }
-        userToUpdate.setName(userRecord.name());
-        userToUpdate.setProfession(userRecord.profession());
-        userToUpdate.setResume(userRecord.resume());
-        userToUpdate.setCompetence(userRecord.competence());
-        userToUpdate.setSocial(userRecord.social());
-        userToUpdate.setGrade(userRecord.grade());
-        userToUpdate.setAbility(userRecord.ability());
-        userToUpdate.setAvatarImg(userRecord.avatarImg());
-        userToUpdate.setRealImg(userRecord.realImg());
-        userToUpdate.setContact(userRecord.contact());
-        userToUpdate.setUserExperiences(userRecord.userExperiences());
+
+        mapFields(userToUpdate, userRecord);
+        userToUpdate.setLastUpdatedToNow();
 
         LocalLog.log(":positive Updating user, name: " + userToUpdate.getName() + ", email: " + userToUpdate.getContact().email().get(0));
         return userRepository.save(userToUpdate);
@@ -110,7 +110,7 @@ public class UserServiceImpl implements UserService {
         List<Login> logins;
 
         if(login.userId().isBlank()) {
-            logins = loginRepository.findByEmailAndPassword(login.email(), login.password());
+            logins = loginRepository.findByEmailAndPasswordAndLanguage(login.email(), login.password(), login.language());
         }else {
             logins = loginRepository.findByUserIdAndPasswordAndEmail(login.userId(), login.password(), login.email());
         }
@@ -160,7 +160,10 @@ public class UserServiceImpl implements UserService {
                         login.password(),
                         login.userId(),
                         LocalDateTime.now(),
-                        LocalDateTime.now()));
+                        LocalDateTime.now(),
+                        login.language()
+                )
+        );
 
         LocalLog.log(":positive New login created for " + login.email());
         String token = UUID.randomUUID().toString();
@@ -180,8 +183,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUserName(String name, String email) {
-        Optional<User> userOptional = userRepository.findFirstByEmail(email);
+    public void updateUserName(String name, String email, String language) {
+        Optional<User> userOptional = userRepository.findFirstByEmailAndLanguage(email, language);
         if (userOptional.isEmpty()) {
             logErr(":negative User not found for email "+email);
             throw new NotFoundException("User not found");
@@ -192,18 +195,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean userExistByNameAndEmail(String name, String email) {
-        Optional<User> userOptional = userRepository.findByNameAndAnyEmail(name, List.of(email));
+    public boolean userExistByNameAndEmail(String name, String email, String language) {
+        Optional<User> userOptional = userRepository.findByNameAndAnyEmailAndLanguage(name, List.of(email), language);
         return userOptional.isPresent();
     }
 
     @Override
-    public DefaultAnswer activateUserById(String id, String code, String email) {
+    public DefaultAnswer activateUserById(String id, String code, String email, String language) {
         User user = null;
 
         if(isEmpty(id) || id.length() != 24) {
             log(":warning Invalid id "+id+ " will try recover user with email "+email);
-            Optional<User> userByEmail = userRepository.findFirstByEmail(email);
+            Optional<User> userByEmail = userRepository.findFirstByEmailAndLanguage(email, language);
             if(userByEmail.isPresent()) {
                 log(":positive User found for email "+email);
                 user = userByEmail.get();
@@ -255,7 +258,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public DefaultAnswer requestDelete(String id, String email) {
+    public DefaultAnswer requestDelete(String id, String email, String language) {
         log(":trash A request to delete data from id " + id + " begun");
 
         Optional<User> optionalUser = null;
@@ -263,7 +266,7 @@ public class UserServiceImpl implements UserService {
 
         if (optionalUser.isEmpty()) {
             log("warning user not found by id " + id + " will search user by email address " + email);
-            optionalUser = userRepository.findFirstByEmail(email);
+            optionalUser = userRepository.findFirstByEmailAndLanguage(email, language);
         } else if(optionalUser.get().getContact().email().isEmpty()) {
             logErr(":negative User not found for id "+ id +" and user does not has e-mail.");
             throw new NoPasswordException("User cannot recover password");
@@ -349,7 +352,7 @@ public class UserServiceImpl implements UserService {
         }
         Login login = loginRepository.findByUserId(user.get_id())
                 .orElseThrow(() -> new NotFoundException("User " + id + " does not exist"));
-        loginRepository.save(new Login(login._id(), login.email(), password, login.userId(), login.firstLogin(), login.lastLogin()));
+        loginRepository.save(new Login(login._id(), login.email(), password, login.userId(), login.firstLogin(), login.lastLogin(), null));
         log(":writing password changed for user " + user.get_id());
         return new DefaultAnswer("Password changed");
     }

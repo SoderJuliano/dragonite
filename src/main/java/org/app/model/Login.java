@@ -9,20 +9,31 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 
 @Document(collection = "login")
-public record Login(@Id ObjectId _id, String email, String password, String userId, @CreatedDate LocalDateTime firstLogin, @LastModifiedDate LocalDateTime lastLogin) {
+public record Login(
+        @Id ObjectId _id,
+        String email,
+        String password,
+        String userId,
+        @CreatedDate LocalDateTime firstLogin,
+        @LastModifiedDate LocalDateTime lastLogin,
+        String language
+        ) {
 
     // Constructor with manual date setting
-    public Login(ObjectId _id, String email, String password, String userId, LocalDateTime firstLogin, LocalDateTime lastLogin) {
+    public Login(ObjectId _id, String email, String password, String userId, LocalDateTime firstLogin,
+                 LocalDateTime lastLogin, String language) {
         this._id = _id == null ? new ObjectId() : _id;
         this.email = email;
         this.password = password;
         this.userId = userId;
         this.firstLogin = firstLogin;
         this.lastLogin = lastLogin;
+        this.language = language;
     }
 
     // Constructor without _id to let MongoDB generate it
-    public Login(String email, String password, String userId, LocalDateTime firstLogin, LocalDateTime lastLogin) {
-        this(new ObjectId(), email, password, userId, firstLogin, lastLogin);
+    public Login(String email, String password, String userId, LocalDateTime firstLogin,
+                 LocalDateTime lastLogin, String language) {
+        this(new ObjectId(), email, password, userId, firstLogin, lastLogin, language);
     }
 }

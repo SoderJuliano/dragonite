@@ -3,7 +3,9 @@ package org.app.controller;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.apache.coyote.BadRequestException;
+import org.app.model.LanguageRequest;
 import org.app.model.Login;
+import org.app.model.NameChangeRequest;
 import org.app.model.UserRecord;
 import org.app.model.common.DefaultAnswer;
 import org.app.model.requests.NewPasswordRequest;
@@ -51,19 +53,23 @@ public class UserController {
     }
 
     @PatchMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> updateName(@RequestParam String name, @RequestParam String email) {
-        if(userService.userExistByNameAndEmail(name, email)) {
+    public ResponseEntity<String> updateName(@RequestParam String name, @RequestParam String email,
+                                             @RequestBody NameChangeRequest request) {
+        if(userService.userExistByNameAndEmail(name, email, request.language())) {
             LocalLog.log(":stone_face ignored");
             return ResponseEntity.status(200).body("ignore");
         }
-        userService.updateUserName(name, email);
+        userService.updateUserName(name, email, request.language());
         return ResponseEntity.ok().build();
     }
 
     @PatchMapping(path = "/activate/{id}/{code}/{email}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DefaultAnswer> activateUser(
-            @PathVariable String id, @PathVariable String code, @PathVariable String email) throws BadRequestException {
-        return ResponseEntity.status(200).body(userService.activateUserById(id, code, email));
+            @PathVariable String id,
+            @PathVariable String code,
+            @PathVariable String email,
+            @RequestBody LanguageRequest request) throws BadRequestException {
+        return ResponseEntity.status(200).body(userService.activateUserById(id, code, email, request.language()));
     }
 
     @PatchMapping(path = "/recover/{id}/password")
@@ -72,8 +78,10 @@ public class UserController {
     }
 
     @PatchMapping(path = "/request/{id}/{email}/delete")
-    public ResponseEntity<DefaultAnswer> requestDelete(@PathVariable String id, @PathVariable String email) {
-        return ResponseEntity.status(200).body(userService.requestDelete(id, email));
+    public ResponseEntity<DefaultAnswer> requestDelete(@PathVariable String id,
+                                                       @PathVariable String email,
+                                                       @RequestBody LanguageRequest request) {
+        return ResponseEntity.status(200).body(userService.requestDelete(id, email, request.language()));
     }
 
     @DeleteMapping(path = "/delete/{id}/{token}")
