@@ -47,7 +47,7 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Must have at list one email to save data into database");
         }
 
-        if(userRepository.existsByEmailAndLanguage(userRecord.contact().email().get(0),
+        if(userRepository.existsByContactEmailAndLanguage(userRecord.contact().email().get(0),
                 userRecord.language())) {
             logErr(":negative this email already exist in the database"+userRecord.contact().email().get(0));
             throw new IllegalArgumentException("Can not save those informations");
