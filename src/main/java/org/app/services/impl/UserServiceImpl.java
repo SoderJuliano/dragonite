@@ -46,6 +46,13 @@ public class UserServiceImpl implements UserService {
             logErr(":virus no email found in the payload");
             throw new IllegalArgumentException("Must have at list one email to save data into database");
         }
+
+        if(userRepository.existsByEmailAndLanguage(userRecord.contact().email().get(0),
+                userRecord.language())) {
+            logErr(":negative this email already exist in the database"+userRecord.contact().email().get(0));
+            throw new IllegalArgumentException("Can not save those informations");
+        }
+
         LocalLog.log(":star New user request for " + userRecord.contact().email());
         if(userRecord.name().isEmpty()) {
             logErr(":virus no name found in the payload for "+userRecord.contact().email());
