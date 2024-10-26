@@ -47,6 +47,11 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Must have at list one email to save data into database");
         }
 
+        if(userRecord.language() == null) {
+            logErr(":virus no language found in the payload");
+            throw new IllegalArgumentException("Must have a language");
+        }
+
         if(userRepository.existsByContactEmailAndLanguage(userRecord.contact().email().get(0),
                 userRecord.language())) {
             logErr(":negative this email already exist in the database"+userRecord.contact().email().get(0));
@@ -60,8 +65,7 @@ public class UserServiceImpl implements UserService {
         }
         User newUser = new User();
         try {
-            userRepository.findByNameAndAnyEmailAndLanguage(
-                    userRecord.name(),
+            userRepository.findByAnyEmailAndLanguage(
                     userRecord.contact().email(),
                     userRecord.language()
             ).ifPresent(u -> {
@@ -85,8 +89,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User updateUser(UserRecord userRecord) throws BadRequestException {
-        User userToUpdate = userRepository.findByNameAndAnyEmailAndLanguage(
-                    userRecord.name(),
+        User userToUpdate = userRepository.findByAnyEmailAndLanguage(
                     userRecord.contact().email(),
                     userRecord.language()
                 )
@@ -204,8 +207,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean userExistByNameAndEmail(String name, String email, String language) {
-        Optional<User> userOptional = userRepository.findByNameAndAnyEmailAndLanguage(name, List.of(email), language);
+    public boolean userExistByEmailAndLanguage(String name, String email, String language) {
+        Optional<User> userOptional = userRepository.findByAnyEmailAndLanguage(List.of(email), language);
         return userOptional.isPresent();
     }
 

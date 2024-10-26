@@ -55,7 +55,7 @@ public class UserController {
     @PatchMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateName(@RequestParam String name, @RequestParam String email,
                                              @RequestBody NameChangeRequest request) {
-        if(userService.userExistByNameAndEmail(name, email, request.language())) {
+        if(userService.userExistByEmailAndLanguage(name, email, request.language())) {
             LocalLog.log(":stone_face ignored");
             return ResponseEntity.status(200).body("ignore");
         }

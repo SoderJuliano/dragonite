@@ -6,9 +6,7 @@ import org.app.model.UserRecord;
 import org.app.model.common.DefaultAnswer;
 import org.app.model.entity.User;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URISyntaxException;
 
 public interface UserService {
 
@@ -24,7 +22,7 @@ public interface UserService {
 
     public void updateUserName(String name, String email, String language);
 
-    public boolean userExistByNameAndEmail(String name, String email, String language);
+    public boolean userExistByEmailAndLanguage(String name, String email, String language);
 
     public DefaultAnswer activateUserById(String id, String code, String email, String language);
 
