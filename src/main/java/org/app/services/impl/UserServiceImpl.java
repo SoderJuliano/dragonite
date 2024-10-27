@@ -335,8 +335,8 @@ public class UserServiceImpl implements UserService {
         if(logins.isEmpty()) {
             logErr(":negative Login not found for user id " + id);
         }else {
-            loginRepository.deleteByUserId(user.get_id());
-            log(":fire Login deleted for user " + user.get_id());
+            loginRepository.deleteByUserId(user.getId());
+            log(":fire Login deleted for user " + user.getId());
         }
 
         userRepository.deleteById(id);
@@ -362,10 +362,10 @@ public class UserServiceImpl implements UserService {
         if(!user.getActivationCode().equals(token)) {
             throw new BadRequestException("User " + id + " cannot change password");
         }
-        Login login = loginRepository.findByUserId(user.get_id())
+        Login login = loginRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new NotFoundException("User " + id + " does not exist"));
         loginRepository.save(new Login(login._id(), login.email(), password, login.userId(), login.firstLogin(), login.lastLogin(), null));
-        log(":writing password changed for user " + user.get_id());
+        log(":writing password changed for user " + user.getId());
         return new DefaultAnswer("Password changed");
     }
 

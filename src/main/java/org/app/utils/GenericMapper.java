@@ -11,6 +11,12 @@ public class GenericMapper {
         // Percorre todos os campos declarados na classe source
         for (Field sourceField : sourceClass.getDeclaredFields()) {
             try {
+
+                // Skip the 'id' field to avoid overwriting it
+                if (sourceField.getName().equals("id") || sourceField.getName().equals("_id")) {
+                    continue;
+                }
+
                 // Encontra o mesmo campo na classe target
                 Field targetField = targetClass.getDeclaredField(sourceField.getName());
 

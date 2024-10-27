@@ -18,9 +18,7 @@ import static org.app.utils.Commons.isTheSame;
 @Document(collection = "user")
 public class User {
     @Id
-    private String _id; // MongoDB's internal identifier field
-
-    private int id; // Front-end ID
+    private String id; // MongoDB's internal identifier field
     private String name;
     private String profession;
     private String resume;
@@ -46,12 +44,11 @@ public class User {
     public User() {
     }
 
-    public User(String _id, int id, String name, String profession, String resume, List<String> competence,
+    public User(String _id, String name, String profession, String resume, List<String> competence,
                 List<String> social, List<String> grade, String ability, String avatarImg, String realImg,
                 Contact contact, String deleteToken, List<UserExperiences> experiences, String language,
                 List<SpokenLanguages> spokenLanguages) {
-        this._id = _id;
-        this.id = id;
+        this.id = _id;
         this.name = name;
         this.profession = profession;
         this.resume = resume;
@@ -71,19 +68,11 @@ public class User {
     }
 
     // Getters and Setters
-    public String get_id() {
-        return _id;
-    }
-
-    public void set_id(String _id) {
-        this._id = _id;
-    }
-
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -241,12 +230,12 @@ public class User {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return id == user.id && Objects.equals(_id, user._id);
+        return Objects.equals(id, user.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(_id, id);
+        return Objects.hash(id);
     }
 
     public String getDeleteToken() {
@@ -268,8 +257,7 @@ public class User {
     @Override
     public String toString() {
         return "User{" +
-                "_id='" + _id + '\'' +
-                ", id=" + id +
+                "_id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", profession='" + profession + '\'' +
                 ", resume='" + resume + '\'' +
