@@ -1,22 +1,31 @@
 package org.app.controller;
 
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.apache.coyote.BadRequestException;
+import org.app.config.SecretManager;
 import org.app.model.LanguageRequest;
 import org.app.model.Login;
 import org.app.model.NameChangeRequest;
 import org.app.model.UserRecord;
 import org.app.model.common.DefaultAnswer;
+import org.app.model.entity.User;
 import org.app.model.requests.NewPasswordRequest;
 import org.app.services.UserService;
 import org.app.utils.LocalLog;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 
 @Tag(name = "custom-cv-online`s User", description = "User`s endpoints of https://custom-cv-online.netlify.app.")
 @RestController
@@ -44,7 +53,26 @@ public class UserController {
 
     @PostMapping(path = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DefaultAnswer> login(@RequestBody Login login) throws BadRequestException {
-        return  ResponseEntity.status(200).body(new DefaultAnswer(userService.login(login)));
+        User user = userService.login(login);
+
+        // Retrieve JWT secret from secrets file
+        String jwtSecret = SecretManager.getSecret("jwt-secret");
+
+        // Generate JWT with user info after successful login
+        String jwtToken = Jwts.builder()
+                .setSubject(user.getId())
+                .claim("name", user.getName())
+                .claim("email", user.getContact().email().get(0))
+                .setExpiration(Date.from(Instant.now().plus(7, ChronoUnit.DAYS)))
+                .signWith(SignatureAlgorithm.HS256, jwtSecret)
+                .compact();
+
+        // Return token in the header
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("token", jwtToken);
+
+        return ResponseEntity.status(HttpStatus.OK).headers(headers)
+                .body(new DefaultAnswer(user));
     }
 
     @PostMapping(path = "/register", produces = MediaType.APPLICATION_JSON_VALUE)
