@@ -30,7 +30,12 @@ import java.util.Date;
 @Tag(name = "custom-cv-online`s User", description = "User`s endpoints of https://custom-cv-online.netlify.app.")
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS, RequestMethod.PATCH})
+@CrossOrigin(
+        origins = "*",
+        allowedHeaders = "*",
+        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS, RequestMethod.PATCH},
+        exposedHeaders = {"token"}
+)
 public class UserController {
 
     @Autowired
@@ -70,6 +75,8 @@ public class UserController {
         // Return token in the header
         HttpHeaders headers = new HttpHeaders();
         headers.set("token", jwtToken);
+
+        LocalLog.log(jwtToken);
 
         return ResponseEntity.status(HttpStatus.OK).headers(headers)
                 .body(new DefaultAnswer(user));
