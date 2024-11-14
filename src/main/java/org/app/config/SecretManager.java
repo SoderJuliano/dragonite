@@ -18,4 +18,9 @@ public class SecretManager {
     public static String getSecret(String key) {
         return properties.getProperty(key);
     }
+
+    public static void setMongoURI() {
+        String mongoURI = getSecret("MONGODB_URI");
+        System.setProperty("mongodb.uri", mongoURI);
+    }
 }
