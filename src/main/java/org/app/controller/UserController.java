@@ -23,6 +23,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -127,5 +129,18 @@ public class UserController {
     @PatchMapping(path = "/request/setPassword")
     public ResponseEntity<DefaultAnswer> setPassword(@Valid @RequestBody NewPasswordRequest request) {
         return ResponseEntity.status(200).body(userService.setPassword(request.id(), request.password(), request.token()));
+    }
+
+    @PatchMapping(path = "/recover/{email}/{language}/password")
+    public ResponseEntity<DefaultAnswer> recoverPasswordByEmail(@PathVariable String email, @PathVariable String language) {
+        String decodedEmail = null;
+        try {
+            // Decodifica o email que foi passado na URL
+            decodedEmail = URLDecoder.decode(email, StandardCharsets.UTF_8.name());
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(new DefaultAnswer("Invalid email format"));
+        }
+
+        return ResponseEntity.status(200).body(userService.recoverPasswordByEmail(decodedEmail, language));
     }
 }

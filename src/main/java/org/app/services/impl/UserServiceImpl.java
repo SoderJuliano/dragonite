@@ -369,6 +369,12 @@ public class UserServiceImpl implements UserService {
         return new DefaultAnswer("Password changed");
     }
 
+    @Override
+    public DefaultAnswer recoverPasswordByEmail(String email, String language) {
+        User user = userRepository.findFirstByEmailAndLanguage(email, language).orElseThrow(() -> new NotFoundException("Not found user " + email));
+        return recoverPassword(user.getId());
+    }
+
     private User getUserbyId(String id) {
         Optional<User> userOptional = userRepository.findById(id);
         if (userOptional.isEmpty()) {
