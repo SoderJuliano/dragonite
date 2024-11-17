@@ -364,7 +364,7 @@ public class UserServiceImpl implements UserService {
         }
         Login login = loginRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new NotFoundException("User " + id + " does not exist"));
-        loginRepository.save(new Login(login._id(), login.email(), password, login.userId(), login.firstLogin(), login.lastLogin(), null));
+        loginRepository.save(new Login(login._id(), login.email(), password, login.userId(), login.firstLogin(), login.lastLogin(), login.language()));
         log(":writing password changed for user " + user.getId());
         return new DefaultAnswer("Password changed");
     }
