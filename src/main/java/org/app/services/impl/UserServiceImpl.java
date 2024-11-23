@@ -25,6 +25,7 @@ import static org.app.utils.Commons.isEmpty;
 import static org.app.utils.GenericMapper.mapFields;
 import static org.app.utils.LocalLog.log;
 import static org.app.utils.LocalLog.logErr;
+import static org.app.utils.PasswordUtils.hashPassword;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -120,11 +121,11 @@ public class UserServiceImpl implements UserService {
         List<Login> logins;
 
         if(login.userId().isBlank()) {
-            logins = loginRepository.findByEmailAndPasswordAndLanguage(login.email(), login.password(), login.language());
+            logins = loginRepository.findByEmailAndPasswordAndLanguage(login.email(), hashPassword(login.password()), login.language());
         }else {
-            logins = loginRepository.findByUserIdAndPasswordAndEmail(login.userId(), login.password(), login.email());
+            logins = loginRepository.findByUserIdAndPasswordAndEmail(login.userId(), hashPassword(login.password()), login.email());
         }
-
+        //Em caso de login por token, esse token já é um hash e vai vir no campo password
         boolean hasActivationCode = userRepository.existsByActivationCodeAndId(login.password(), login.userId());
 
         if(hasActivationCode) {
@@ -166,10 +167,11 @@ public class UserServiceImpl implements UserService {
             logErr(":negative User do not exist for " + login.email());
             return new BadRequestException("Can't do login");
         });
+
         Login newLogin = loginRepository.insert(
                 new Login(
                         login.email(),
-                        login.password(),
+                        hashPassword(login.password()),
                         login.userId(),
                         LocalDateTime.now(),
                         LocalDateTime.now(),
@@ -364,7 +366,7 @@ public class UserServiceImpl implements UserService {
         }
         Login login = loginRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new NotFoundException("User " + id + " does not exist"));
-        loginRepository.save(new Login(login._id(), login.email(), password, login.userId(), login.firstLogin(), login.lastLogin(), login.language()));
+        loginRepository.save(new Login(login._id(), login.email(), hashPassword(password), login.userId(), login.firstLogin(), login.lastLogin(), login.language()));
         log(":writing password changed for user " + user.getId());
         return new DefaultAnswer("Password changed");
     }
