@@ -1,6 +1,7 @@
 package org.app.services;
 
 import org.apache.coyote.BadRequestException;
+import org.app.model.FrontHost;
 import org.app.model.Login;
 import org.app.model.UserRecord;
 import org.app.model.common.DefaultAnswer;
@@ -26,7 +27,7 @@ public interface UserService {
 
     public DefaultAnswer activateUserById(String id, String code, String email, String language);
 
-    public DefaultAnswer recoverPassword(String id);
+    public DefaultAnswer recoverPassword(String id, String host);
 
     public DefaultAnswer requestDelete(String id, String email, String language);
 
@@ -34,5 +35,5 @@ public interface UserService {
 
     DefaultAnswer setPassword(String id, String password, String token);
 
-    public DefaultAnswer recoverPasswordByEmail(String email, String language);
+    public DefaultAnswer recoverPasswordByEmail(String email, String language, FrontHost request);
 }

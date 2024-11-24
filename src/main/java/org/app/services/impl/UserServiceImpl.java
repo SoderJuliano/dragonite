@@ -4,6 +4,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.app.Exceptions.BadRequestException;
 import org.app.Exceptions.NoPasswordException;
 import org.app.Exceptions.NotFoundException;
+import org.app.model.FrontHost;
 import org.app.model.Login;
 import org.app.model.UserRecord;
 import org.app.model.common.DefaultAnswer;
@@ -241,33 +242,39 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public DefaultAnswer recoverPassword(String id) {
+    public DefaultAnswer recoverPassword(String id, String host) {
         Optional<User> optionalUser = userRepository.findById(id);
         if (optionalUser.isEmpty() || optionalUser.get().getContact().email().isEmpty()) {
-            logErr(":negative User not found for id "+ id);
+            logErr(":negative User not found for id " + id);
             throw new NoPasswordException("User cannot recover password");
         }
 
         String newPasswordToken = RandomStringUtils.randomAlphanumeric(10);
         String email = optionalUser.get().getContact().email().get(0);
+
+        // Verifica se o host é válido, caso contrário, usa o valor padrão
+        String baseUrl = (host == null || host.isEmpty()) ? "https://custom-cv-online.netlify.app" : host;
+
         String newMessage = "Dear User,<br><br>" +
-        "We have received a request to reset your password. Please follow the instructions below to complete the process:<br><br>" +
-        "1. Click on the following link to reset your password:<br><a href=\"https://custom-cv-online.netlify.app/recover/password?newPasswordToken={{newPasswordToken}}\">Reset Password</a><br><br>" +
-        "2. If you prefer, you can also log in with the token provided below and change your password later in the loginList preferences section:<br><br>" +
-        "Token: {{newPasswordToken}}<br><br>" +
-        "If you did not request a password reset, please ignore this email and your password will remain unchanged.<br><br>" +
-        "Best regards,<br>" +
-        "The Custom CV Online Team";
+                "We have received a request to reset your password. Please follow the instructions below to complete the process:<br><br>" +
+                "1. Click on the following link to reset your password:<br>" +
+                "<a href=\"" + baseUrl + "/recover/password?newPasswordToken={{newPasswordToken}}\">Reset Password</a><br><br>" +
+                "2. If you prefer, you can also log in with the token provided below and change your password later in the loginList preferences section:<br><br>" +
+                "Token: {{newPasswordToken}}<br><br>" +
+                "If you did not request a password reset, please ignore this email and your password will remain unchanged.<br><br>" +
+                "Best regards,<br>" +
+                "The Custom CV Online Team";
 
         String filledMessage = newMessage.replace("{{newPasswordToken}}", newPasswordToken);
         boolean success = twoStepService.sendHtmlEmail(email, "Reset Password", filledMessage);
-        if(!success) {
-            logErr(":lock Failed to send password reset email to user "+email);
+        if (!success) {
+            logErr(":lock Failed to send password reset email to user " + email);
             throw new BadRequestException("Cannot reset password");
         }
+
         optionalUser.get().setActivationCode(newPasswordToken);
         userRepository.save(optionalUser.get());
-        log(":smile Sent password reset email to user "+email);
+        log(":smile Sent password reset email to user " + email);
         return new DefaultAnswer("New password reset sent to e-mail successfully, and token saved to reset password");
     }
 
@@ -372,9 +379,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public DefaultAnswer recoverPasswordByEmail(String email, String language) {
+    public DefaultAnswer recoverPasswordByEmail(String email, String language, FrontHost request) {
         User user = userRepository.findFirstByEmailAndLanguage(email, language).orElseThrow(() -> new NotFoundException("Not found user " + email));
-        return recoverPassword(user.getId());
+        return recoverPassword(user.getId(), request.host());
     }
 
     private User getUserbyId(String id) {

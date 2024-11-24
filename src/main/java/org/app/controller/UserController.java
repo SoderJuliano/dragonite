@@ -6,10 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.apache.coyote.BadRequestException;
 import org.app.config.SecretManager;
-import org.app.model.LanguageRequest;
-import org.app.model.Login;
-import org.app.model.NameChangeRequest;
-import org.app.model.UserRecord;
+import org.app.model.*;
 import org.app.model.common.DefaultAnswer;
 import org.app.model.entity.User;
 import org.app.model.requests.NewPasswordRequest;
@@ -110,8 +107,8 @@ public class UserController {
     }
 
     @PatchMapping(path = "/recover/{id}/password")
-    public ResponseEntity<DefaultAnswer> recoverPassword(@PathVariable String id) {
-        return ResponseEntity.status(200).body(userService.recoverPassword(id));
+    public ResponseEntity<DefaultAnswer> recoverPassword(@PathVariable String id, @RequestBody FrontHost host) {
+        return ResponseEntity.status(200).body(userService.recoverPassword(id, host.host()));
     }
 
     @PatchMapping(path = "/request/{id}/{email}/delete")
@@ -132,7 +129,8 @@ public class UserController {
     }
 
     @PatchMapping(path = "/recover/{email}/{language}/password")
-    public ResponseEntity<DefaultAnswer> recoverPasswordByEmail(@PathVariable String email, @PathVariable String language) {
+    public ResponseEntity<DefaultAnswer> recoverPasswordByEmail(@PathVariable String email, @PathVariable String language,
+                                                                @RequestBody FrontHost request) {
         String decodedEmail = null;
         try {
             // Decodifica o email que foi passado na URL
@@ -141,6 +139,6 @@ public class UserController {
             return ResponseEntity.status(400).body(new DefaultAnswer("Invalid email format"));
         }
 
-        return ResponseEntity.status(200).body(userService.recoverPasswordByEmail(decodedEmail, language));
+        return ResponseEntity.status(200).body(userService.recoverPasswordByEmail(decodedEmail, language, request));
     }
 }
