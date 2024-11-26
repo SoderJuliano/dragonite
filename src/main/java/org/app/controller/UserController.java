@@ -125,7 +125,7 @@ public class UserController {
 
     @PatchMapping(path = "/request/setPassword")
     public ResponseEntity<DefaultAnswer> setPassword(@Valid @RequestBody NewPasswordRequest request) {
-        return ResponseEntity.status(200).body(userService.setPassword(request.id(), request.password(), request.token()));
+        return ResponseEntity.status(200).body(userService.setPassword(request.id(), request.password(), request.token(), request.email(), request.language()));
     }
 
     @PatchMapping(path = "/recover/{email}/{language}/password")

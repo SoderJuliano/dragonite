@@ -33,7 +33,7 @@ public interface UserService {
 
     public DefaultAnswer doRequestDelete(String id, String token);
 
-    DefaultAnswer setPassword(String id, String password, String token);
+    DefaultAnswer setPassword(String id, String password, String token, String email, String language);
 
     public DefaultAnswer recoverPasswordByEmail(String email, String language, FrontHost request);
 }
