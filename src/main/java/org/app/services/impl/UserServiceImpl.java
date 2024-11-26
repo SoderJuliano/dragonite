@@ -27,6 +27,7 @@ import static org.app.utils.Commons.notEmpty;
 import static org.app.utils.GenericMapper.mapFields;
 import static org.app.utils.LocalLog.log;
 import static org.app.utils.LocalLog.logErr;
+import static org.app.utils.PasswordUtils.checkPassword;
 import static org.app.utils.PasswordUtils.hashPassword;
 
 @Service
@@ -121,12 +122,18 @@ public class UserServiceImpl implements UserService {
         LocalLog.log(":loz Trying login for " + login.email());
 
         List<Login> logins;
-
-        if(login.userId().isBlank()) {
-            logins = loginRepository.findByEmailAndPasswordAndLanguage(login.email(), hashPassword(login.password()), login.language());
-        }else {
-            logins = loginRepository.findByUserIdAndPasswordAndEmail(login.userId(), hashPassword(login.password()), login.email());
+        logins = loginRepository.findByUserIdAndEmail(login.userId(), login.email());
+        if(logins.isEmpty()) {
+            logins = loginRepository.findByEmailAndLanguage(login.email(), login.language());
         }
+
+        boolean isValidLogin = logins.stream()
+                .anyMatch(l -> checkPassword(login.password(), l.password()));
+
+        if (!isValidLogin) {
+            throw new BadRequestException("Invalid email, password, or language.");
+        }
+
         //Em caso de login por token, esse token já é um hash e vai vir no campo password
         boolean hasActivationCode = userRepository.existsByActivationCodeAndId(login.password(), login.userId());
 
