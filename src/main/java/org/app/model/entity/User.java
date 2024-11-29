@@ -47,7 +47,7 @@ public class User {
     public User(String _id, String name, String profession, String resume, List<String> competence,
                 List<String> social, List<String> grade, String ability, String avatarImg, String realImg,
                 Contact contact, String deleteToken, List<UserExperiences> experiences, String language,
-                List<SpokenLanguages> spokenLanguages) {
+                List<SpokenLanguages> spokenLanguages, OtherExperiencies otherExperience) {
         this.id = _id;
         this.name = name;
         this.profession = profession;
@@ -65,6 +65,7 @@ public class User {
         this.spokenLanguages = spokenLanguages;
         ZoneId timeZone = ZoneId.of("America/Sao_Paulo");
         this.createdDate = LocalDateTime.now(timeZone);
+        this.otherExperiencies = otherExperience;
     }
 
     // Getters and Setters
