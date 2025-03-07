@@ -4,40 +4,51 @@ import okhttp3.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.app.config.SecretManager.getSecret;
 
 @Service
-public class OpenAIService {
+public class ResumeAgentService {
     private static final String BASE_URL = "https://api.aimlapi.com/v1";
+    private static final Properties properties = new Properties();
+
+    // Carrega as propriedades do arquivo de segredos
+    static {
+        String path = "/home/soder/Área de trabalho/app/secrets.txt"; // Caminho do arquivo de segredos
+        try (FileInputStream input = new FileInputStream(path)) {
+            properties.load(input);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load secrets file", e);
+        }
+    }
+
     private final OkHttpClient client = new OkHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public String generateText(String prompt) throws IOException {
-
+    public String generateResume(String userPrompt, String systemPrompt) throws IOException {
         String apiKey = getSecret("OPENAI_API_KEY");
         if (apiKey == null || apiKey.isEmpty()) {
             throw new RuntimeException("API Key not found in secrets file");
         }
 
-        // Cria o corpo da solicitação no formato esperado pela AIML API
-        Map<String, Object> message = new HashMap<>();
-        message.put("role", "user");
-        message.put("content", prompt);
+        Map<String, Object> systemMessage = new HashMap<>();
+        systemMessage.put("role", "system");
+        systemMessage.put("content", systemPrompt);
+
+        Map<String, Object> userMessage = new HashMap<>();
+        userMessage.put("role", "user");
+        userMessage.put("content", userPrompt);
 
         Map<String, Object> requestBodyMap = new HashMap<>();
         requestBodyMap.put("model", "mistralai/Mistral-7B-Instruct-v0.2");
-        requestBodyMap.put("messages", Collections.singletonList(message));
-        requestBodyMap.put("temperature", 0.7);
-        requestBodyMap.put("max_tokens", 256);
+        requestBodyMap.put("messages", List.of(systemMessage, userMessage));
+        requestBodyMap.put("temperature", 0.5);
+        requestBodyMap.put("max_tokens", 1000);
 
         String requestBody = objectMapper.writeValueAsString(requestBodyMap);
-
-        // Cria a solicitação HTTP
         Request request = new Request.Builder()
                 .url(BASE_URL + "/chat/completions")
                 .addHeader("Authorization", "Bearer " + apiKey)
@@ -45,13 +56,11 @@ public class OpenAIService {
                 .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
                 .build();
 
-        // Envia a solicitação e processa a resposta
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new IOException("Erro na solicitação: " + response.code() + " - " + response.message());
+                String errorBody = response.body().string();
+                throw new IOException("Erro na solicitação: " + response.code() + " - " + response.message() + " - " + errorBody);
             }
-
-            // Processa a resposta
             String responseBody = response.body().string();
             return objectMapper.readTree(responseBody)
                     .path("choices")

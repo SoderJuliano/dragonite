@@ -20,7 +20,7 @@ public class ApiInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        if (request.getRequestURI().contains("swagger") || request.getRequestURI().contains("api-docs")) {
+        if (request.getRequestURL().toString().contains("localhost")) {
             return true;
         }
 
