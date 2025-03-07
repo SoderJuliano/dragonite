@@ -46,7 +46,7 @@ public class ResumeAgentService {
         requestBodyMap.put("model", "mistralai/Mistral-7B-Instruct-v0.2");
         requestBodyMap.put("messages", List.of(systemMessage, userMessage));
         requestBodyMap.put("temperature", 0.5);
-        requestBodyMap.put("max_tokens", 1000);
+        requestBodyMap.put("max_tokens", 512);
 
         String requestBody = objectMapper.writeValueAsString(requestBodyMap);
         Request request = new Request.Builder()

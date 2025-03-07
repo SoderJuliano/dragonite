@@ -21,32 +21,23 @@ public class Main {
         ResumeAgentService resumeAgent = new ResumeAgentService();
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            String systemPrompt1 = "Preencha: {\"name\":\"\",\"profession\":\"\",\"resume\":\"\",\"contact\":{\"email\":[],\"phone\":[],\"address\":\"\"}}";
+            String systemPrompt1 = "Preencha com dados curtos: {\"name\":\"\",\"profession\":\"\",\"resume\":\"\",\"contact\":{\"email\":[],\"phone\":[],\"address\":\"\"}}";
             String userPrompt1 = "Dados pessoais para Engenheiro de Software em português";
             String result1 = resumeAgent.generateResume(userPrompt1, systemPrompt1);
 
-            String systemPrompt2 = "Preencha: {\"competence\":[],\"userExperiences\":[],\"ability\":\"\"}";
+            String systemPrompt2 = "Preencha com dados curtos: {\"competence\":[],\"userExperiences\":[],\"ability\":\"\"}";
             String userPrompt2 = "Competências e experiências para Engenheiro de Software em português";
             String result2 = resumeAgent.generateResume(userPrompt2, systemPrompt2);
 
-            String systemPrompt3 = "Preencha: {\"spokenLanguages\":[{\"level\":\"\",\"details\":\"\"}],\"otherInfos\":[],\"language\":\"\"}";
+            String systemPrompt3 = "Preencha com dados curtos: {\"spokenLanguages\":[{\"level\":\"\",\"details\":\"\"}],\"otherInfos\":[],\"language\":\"\"}";
             String userPrompt3 = "Idiomas e outras infos para Engenheiro de Software em português";
             String result3 = resumeAgent.generateResume(userPrompt3, systemPrompt3);
 
-            // Criar um ObjectNode para mesclar os resultados
             ObjectNode mergedJson = objectMapper.createObjectNode();
+            mergedJson.setAll((ObjectNode) objectMapper.readTree(result1));
+            mergedJson.setAll((ObjectNode) objectMapper.readTree(result2));
+            mergedJson.setAll((ObjectNode) objectMapper.readTree(result3));
 
-            // Converter cada resultado em JsonNode e mesclar
-            JsonNode node1 = objectMapper.readTree(result1);
-            JsonNode node2 = objectMapper.readTree(result2);
-            JsonNode node3 = objectMapper.readTree(result3);
-
-            // Usar setAll com ObjectNode
-            mergedJson.setAll((ObjectNode) node1);
-            mergedJson.setAll((ObjectNode) node2);
-            mergedJson.setAll((ObjectNode) node3);
-
-            // Converter o resultado final para String
             String finalJson = objectMapper.writeValueAsString(mergedJson);
             System.out.println("Currículo Completo: " + finalJson);
 
