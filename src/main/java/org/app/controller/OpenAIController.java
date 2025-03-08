@@ -1,22 +1,39 @@
 package org.app.controller;
 
-import org.app.services.OpenAIService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.app.Exceptions.BadRequestException;
+import org.app.model.entity.User;
+import org.app.model.requests.IAPropmptRequest;
+import org.app.services.IAService;
+import org.app.services.ResumeAgentService;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 
 @RestController
 public class OpenAIController {
-    private final OpenAIService openAIService;
+    private final IAService IAService;
+    private final ResumeAgentService resumeAgentService;
 
-    public OpenAIController(OpenAIService openAIService) {
-        this.openAIService = openAIService;
+    public OpenAIController(IAService IAService, ResumeAgentService resumeAgentService) {
+        this.IAService = IAService;
+        this.resumeAgentService = resumeAgentService;
     }
 
-    @GetMapping("/generate")
-    public String generate(@RequestParam String prompt) throws IOException {
-        return openAIService.generateText(prompt);
+    @PostMapping("/generate")
+    public String generate(@RequestBody IAPropmptRequest prompt) throws IOException {
+        if (prompt.isAgent()) {
+            throw new BadRequestException("Call /generate-cv endpoint insted!");
+        }
+        return IAService.generateText(prompt);
+    }
+
+    @PostMapping("/generate-cv")
+    public User generateCv(@RequestBody IAPropmptRequest prompt) {
+        if (!prompt.isAgent()) {
+            throw new BadRequestException("Call /generate endpoint insted!");
+        }
+        return resumeAgentService.generateResume(prompt);
     }
 }

@@ -1,6 +1,6 @@
 package org.app.utils;
 
-import java.util.List;
+import java.util.ArrayList;
 
 public class Commons {
 
@@ -11,6 +11,8 @@ public class Commons {
     public static <T> boolean isEmpty(T value) {
         if(value instanceof String val) {
             return val.isEmpty();
+        } else if (value instanceof ArrayList<?> a) {
+            return a.isEmpty();
         }
         return value == null;
     }

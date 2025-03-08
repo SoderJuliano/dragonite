@@ -1,23 +1,29 @@
 package org.app.services;
 
-import okhttp3.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.*;
+import org.app.model.requests.IAPropmptRequest;
+import org.app.repository.IAPropmpRepository;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.app.config.SecretManager.getSecret;
+import static org.app.utils.AgentServiceUtil.handlePropmpts;
 
 @Service
-public class OpenAIService {
+public class IAService {
     private static final String BASE_URL = "https://api.aimlapi.com/v1";
     private final OkHttpClient client = new OkHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final IAPropmpRepository iaPropmpRepository;
 
-    public String generateText(String prompt) throws IOException {
+    public IAService(IAPropmpRepository iaPropmpRepository) {
+        this.iaPropmpRepository = iaPropmpRepository;
+    }
+
+    public String generateText(IAPropmptRequest prompt) throws IOException {
 
         String apiKey = getSecret("OPENAI_API_KEY");
         if (apiKey == null || apiKey.isEmpty()) {
@@ -27,7 +33,7 @@ public class OpenAIService {
         // Cria o corpo da solicitação no formato esperado pela AIML API
         Map<String, Object> message = new HashMap<>();
         message.put("role", "user");
-        message.put("content", prompt);
+        message.put("content", prompt.getNewPrompt());
 
         Map<String, Object> requestBodyMap = new HashMap<>();
         requestBodyMap.put("model", "mistralai/Mistral-7B-Instruct-v0.2");
@@ -53,6 +59,9 @@ public class OpenAIService {
 
             // Processa a resposta
             String responseBody = response.body().string();
+
+            handlePropmpts(prompt, iaPropmpRepository);
+
             return objectMapper.readTree(responseBody)
                     .path("choices")
                     .get(0)
