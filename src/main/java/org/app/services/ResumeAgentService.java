@@ -16,6 +16,7 @@ import java.util.*;
 
 import static org.app.config.SecretManager.getSecret;
 import static org.app.utils.AgentServiceUtil.handlePropmpts;
+import static org.app.utils.Commons.extractJsonFromString;
 
 @Service
 public class ResumeAgentService {
@@ -173,7 +174,7 @@ public class ResumeAgentService {
                         throw new IOException("Erro na solicitação: " + response.code() + " - " + response.message() + " - " + errorBody);
                     }
                 }
-                String responseBody = response.body().string();
+                String responseBody = extractJsonFromString(response.body().string());
                 return objectMapper.readTree(responseBody)
                         .path("choices")
                         .get(0)
