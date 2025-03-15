@@ -5,10 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import okhttp3.*;
+import org.app.Exceptions.IAException;
 import org.app.model.Language;
 import org.app.model.entity.User;
 import org.app.model.requests.IAPropmptRequest;
 import org.app.repository.IAPropmpRepository;
+import org.app.utils.LocalLog;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -25,6 +27,9 @@ public class ResumeAgentService {
     public static final String API_KEY2 = getSecret("aimlapi.com_KEY2");
     public static final String API_KEY3 = getSecret("aimlapi.com_KEY3");
     public static final String API_KEY4 = getSecret("aimlapi.com_KEY4");
+    public static final String API_KEY5 = getSecret("aimlapi.com_KEY5");
+    public static final String API_KEY6 = getSecret("aimlapi.com_KEY6");
+    public static final String API_KEY7 = getSecret("aimlapi.com_KEY7");
 
     private ArrayList<String> keys = new ArrayList<>();
 
@@ -51,6 +56,10 @@ public class ResumeAgentService {
         keys.add(API_KEY2);
         keys.add(API_KEY3);
         keys.add(API_KEY4);
+        keys.add(API_KEY5);
+        keys.add(API_KEY6);
+        keys.add(API_KEY7);
+
     }
 
     public User generateResume(IAPropmptRequest request) {
@@ -152,7 +161,7 @@ public class ResumeAgentService {
         int keyIndex = 0;
         IOException lastException = null;
 
-        while (retryCount < 3) {
+        while (retryCount < keys.size()+1) {
             String currentKey = keys.get(keyIndex);
             Request request = new Request.Builder()
                     .url(BASE_URL + "/chat/completions")
@@ -164,16 +173,18 @@ public class ResumeAgentService {
             try (Response response = client.newCall(request).execute()) {
                 if (!response.isSuccessful()) {
                     String errorBody = response.body().string();
-                    if (response.code() == 429) {
-                        // Limite atingido, tenta a próxima chave
-                        keyIndex = (keyIndex + 1) % keys.size();
+                    if (response.code() != 200) {
+                        keyIndex = keyIndex < keys.size() ? keyIndex + 1 : 0;
                         retryCount++;
                         lastException = new IOException("Limite de chamadas atingido para a chave " + currentKey + ". Tentando a próxima chave.");
+                        LocalLog.logErr("Key number "+ (retryCount-1) +" limit. Key: "+ currentKey);
                         continue;
                     } else {
                         throw new IOException("Erro na solicitação: " + response.code() + " - " + response.message() + " - " + errorBody);
                     }
                 }
+
+                LocalLog.log("Prompt genereted succesfully for with key number -->" + keyIndex);
                 String responseBody = extractJsonFromString(response.body().string());
                 return objectMapper.readTree(responseBody)
                         .path("choices")
@@ -187,7 +198,77 @@ public class ResumeAgentService {
             }
         }
 
-        // Se chegou aqui, significa que houve 3 erros consecutivos
-        throw new IOException("Falha após 3 tentativas. Último erro: " + (lastException != null ? lastException.getMessage() : "Desconhecido"));
+        // Se chegou aqui, significa que houve erros consecutivos
+        throw new IOException("Falha após muitas tentativas. Último erro: " + (lastException != null ? lastException.getMessage() : "Desconhecido"));
+    }
+
+    public String improveText(String currentText, Language language) throws IOException {
+        if (keys.isEmpty()) {
+            throw new RuntimeException("API Key not found in secrets file");
+        }
+
+        Map<String, Object> systemMessage = new HashMap<>();
+        systemMessage.put("role", "system");
+        systemMessage.put("content", language.equals(Language.ENGLISH) ?
+                "Improve the following text to make it more professional and concise, Only the sentence, no explanations." :
+                "Melhore esse texto e faça ele mais profissional. Apenas a frase em português, sem explicações.");
+
+        Map<String, Object> userMessage = new HashMap<>();
+        userMessage.put("role", "user");
+        userMessage.put("content", currentText);
+
+        Map<String, Object> requestBodyMap = new HashMap<>();
+        requestBodyMap.put("model", "mistralai/Mistral-7B-Instruct-v0.2");
+        requestBodyMap.put("messages", List.of(systemMessage, userMessage));
+        requestBodyMap.put("temperature", 0.5);
+        requestBodyMap.put("max_tokens", 512);
+
+        String requestBody = objectMapper.writeValueAsString(requestBodyMap);
+
+        int retryCount = 0;
+        int keyIndex = 0;
+        IOException lastException = null;
+
+        while (retryCount < keys.size()+1) {
+            String currentKey = keys.get(keyIndex);
+            Request request = new Request.Builder()
+                    .url(BASE_URL + "/chat/completions")
+                    .addHeader("Authorization", "Bearer " + currentKey)
+                    .addHeader("Content-Type", "application/json")
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                    .build();
+
+            try (Response response = client.newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    String errorBody = response.body().string();
+                    if (response.code() != 200) {
+                        // Limite atingido, tenta a próxima chave
+                        keyIndex = keyIndex < keys.size() ? keyIndex + 1 : 0;
+                        retryCount++;
+                        lastException = new IOException("Limite de chamadas atingido para a chave " + currentKey + ". Tentando a próxima chave.");
+                        LocalLog.logErr("Key number "+ (retryCount-1) +" limit reached. Key: "+ currentKey);
+                        continue;
+                    } else {
+                        throw new IAException("Erro na solicitação: " + response.code() + " - " + response.message() + " - " + errorBody);
+                    }
+                }
+
+                LocalLog.log("Prompt genereted succesfully for with key number -->" + keyIndex);
+
+                String responseBody = extractJsonFromString(response.body().string());
+                return objectMapper.readTree(responseBody)
+                        .path("choices")
+                        .get(0)
+                        .path("message")
+                        .path("content")
+                        .asText();
+            } catch (IOException e) {
+                retryCount++;
+                lastException = e;
+            }
+        }
+
+        // Se chegou aqui, significa que houve 10 erros consecutivos
+        throw new IAException("Falha após muitas tentativas. Último erro: " + (lastException != null ? lastException.getMessage() : "Desconhecido"));
     }
 }
