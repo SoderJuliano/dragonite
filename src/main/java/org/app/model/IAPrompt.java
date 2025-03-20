@@ -1,5 +1,6 @@
 package org.app.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotNull;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 @Document(collection = "ia_prompts")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class IAPrompt {
     @Id
     private ObjectId _id;
