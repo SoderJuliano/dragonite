@@ -41,7 +41,8 @@ public class ResumeAgentService {
     public static final String NAME_PROFESSION_RESUME_CONTACT_EMAIL_PHONE_ADDRESS = " {\"name\":\"\",\"profession\":\"\",\"resume\":\"\",\"contact\":{\"email\":[],\"phone\":[],\"address\":\"\"}}";
     public static final String COMPETENCE_USER_EXPERIENCES_ABILITY =
             " {\"competence\":[],\"userExperiences\":[{\"position\":\"\",\"company\":\"\",\"dateHired\":\"\",\"dateFired\":\"\",\"description\":\"\"}],\"ability\":\"\"}";
-    public static final String SPOKEN_LANGUAGES_LEVEL_DETAILS_OTHER_INFOS_LANGUAGE = " {\"spokenLanguages\":[{\"level\":\"\",\"details\":\"\"}],\"otherInfos\":[],\"language\":\"\"}";
+    public static final String SPOKEN_LANGUAGES_LEVEL_DETAILS_OTHER_INFOS_LANGUAGE =
+            " {\"spokenLanguages\":[{\"level\":\"\",\"details\":\"\"}],\"otherInfos\":[]}";
     public static final String EM_PORTUGUES = "em português";
     private final IAPropmpRepository iaPropmpRepository;
 
