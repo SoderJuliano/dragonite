@@ -43,6 +43,8 @@ public class ResumeAgentService {
             " {\"competence\":[],\"userExperiences\":[{\"position\":\"\",\"company\":\"\",\"dateHired\":\"\",\"dateFired\":\"\",\"description\":\"\"}],\"ability\":\"\"}";
     public static final String SPOKEN_LANGUAGES_LEVEL_DETAILS_OTHER_INFOS_LANGUAGE =
             " {\"spokenLanguages\":[{\"level\":\"\",\"details\":\"\"}],\"otherInfos\":[]}";
+    public static final String EDUCATION_GRADE = " {\"grade\":[]}";
+
     public static final String EM_PORTUGUES = "em português";
     private final IAPropmpRepository iaPropmpRepository;
 
@@ -74,30 +76,38 @@ public class ResumeAgentService {
             String systemPrompt1 = FILL_WITH_DATA + NAME_PROFESSION_RESUME_CONTACT_EMAIL_PHONE_ADDRESS;
             String systemPrompt2 = FILL_WITH_DATA + COMPETENCE_USER_EXPERIENCES_ABILITY;
             String systemPrompt3 = FILL_WITH_DATA + SPOKEN_LANGUAGES_LEVEL_DETAILS_OTHER_INFOS_LANGUAGE;
+            String systemPrompt4 = FILL_WITH_DATA + EDUCATION_GRADE;
             systemPrompts.add(systemPrompt1);
             systemPrompts.add(systemPrompt2);
             systemPrompts.add(systemPrompt3);
+            systemPrompts.add(systemPrompt4);
 
             String userPrompt1 = "Personal data for " + request.getNewPrompt() + IN_ENGLISH;
             String userPrompt2 = "Skills and experiences for " + request.getNewPrompt() + IN_ENGLISH;
             String userPrompt3 = "Languages and other infos for" + request.getNewPrompt() + IN_ENGLISH;
+            String userPrompt4 = "Education information for " + request.getNewPrompt() + IN_ENGLISH;
             userPrompts.add(userPrompt1);
             userPrompts.add(userPrompt2);
             userPrompts.add(userPrompt3);
+            systemPrompts.add(userPrompt4);
         }else {
             String systemPrompt1 = PREENCHA_COM_DADOS_CURTOS + NAME_PROFESSION_RESUME_CONTACT_EMAIL_PHONE_ADDRESS;
             String systemPrompt2 = PREENCHA_COM_DADOS_CURTOS + COMPETENCE_USER_EXPERIENCES_ABILITY;
             String systemPrompt3 = PREENCHA_COM_DADOS_CURTOS + SPOKEN_LANGUAGES_LEVEL_DETAILS_OTHER_INFOS_LANGUAGE;
+            String systemPrompt4 = PREENCHA_COM_DADOS_CURTOS + EDUCATION_GRADE;
             systemPrompts.add(systemPrompt1);
             systemPrompts.add(systemPrompt2);
             systemPrompts.add(systemPrompt3);
+            systemPrompts.add(systemPrompt4);
 
             String userPrompt1 = "Dados pessoais para " + request.getNewPrompt() + EM_PORTUGUES;
             String userPrompt2 = "Competências e experiências para " + request.getNewPrompt() + EM_PORTUGUES;
             String userPrompt3 = "Idiomas e outras infos para " + request.getNewPrompt() + EM_PORTUGUES;
+            String userPrompt4 = "Informações educacionais para " + request.getNewPrompt() + EM_PORTUGUES;
             userPrompts.add(userPrompt1);
             userPrompts.add(userPrompt2);
             userPrompts.add(userPrompt3);
+            userPrompts.add(userPrompt4);
         }
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -105,11 +115,13 @@ public class ResumeAgentService {
             String result1 = generateResume(userPrompts.get(0), systemPrompts.get(0));
             String result2 = generateResume(userPrompts.get(1), systemPrompts.get(1));
             String result3 = generateResume(userPrompts.get(2), systemPrompts.get(2));
+            String result4 = generateResume(userPrompts.get(3), systemPrompts.get(3));
 
             ObjectNode mergedJson = objectMapper.createObjectNode();
             mergedJson.setAll((ObjectNode) objectMapper.readTree(result1));
             mergedJson.setAll((ObjectNode) objectMapper.readTree(result2));
             mergedJson.setAll((ObjectNode) objectMapper.readTree(result3));
+            mergedJson.setAll((ObjectNode) objectMapper.readTree(result4));
 
             // Ajustar otherInfos para ser uma lista de strings
             if (mergedJson.has("otherInfos")) {
