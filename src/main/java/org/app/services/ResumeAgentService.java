@@ -31,6 +31,7 @@ public class ResumeAgentService {
     public static final String API_KEY5 = getSecret("aimlapi.com_KEY5");
     public static final String API_KEY6 = getSecret("aimlapi.com_KEY6");
     public static final String API_KEY7 = getSecret("aimlapi.com_KEY7");
+    public static final String API_KEY8 = getSecret("aimlapi.com_KEY8");
 
     private ArrayList<String> keys = new ArrayList<>();
 
@@ -63,7 +64,7 @@ public class ResumeAgentService {
         keys.add(API_KEY5);
         keys.add(API_KEY6);
         keys.add(API_KEY7);
-
+        keys.add(API_KEY8);
     }
 
     public User generateResume(IAPropmptRequest request) {
