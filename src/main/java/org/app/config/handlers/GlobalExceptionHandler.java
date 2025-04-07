@@ -1,10 +1,7 @@
 package org.app.config.handlers;
 
 import com.mongodb.DuplicateKeyException;
-import org.app.Exceptions.BadRequestException;
-import org.app.Exceptions.NoPasswordException;
-import org.app.Exceptions.NotFoundException;
-import org.app.Exceptions.UnauthorizedException;
+import org.app.Exceptions.*;
 import org.app.model.common.DefaultAnswer;
 import org.app.utils.LocalLog;
 import org.springframework.http.HttpStatus;
@@ -60,5 +57,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<DefaultAnswer> handleNoPasswordException(NoPasswordException exception) {
         LocalLog.logErr(":lock "+ exception.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT.value()).body(new DefaultAnswer(exception));
+    }
+
+    @ExceptionHandler(CustomHttpException.class)
+    public ResponseEntity<DefaultAnswer> handleCustomHttpException(CustomHttpException ex) {
+        DefaultAnswer errorResponse = new DefaultAnswer(ex);
+        return new ResponseEntity<>(errorResponse, HttpStatus.valueOf(ex.getStatusCode()));
     }
 }

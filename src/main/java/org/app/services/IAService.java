@@ -7,7 +7,9 @@ import org.app.repository.IAPropmpRepository;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.app.config.SecretManager.getSecret;
 import static org.app.utils.AgentServiceUtil.handlePropmpts;
@@ -70,4 +72,37 @@ public class IAService {
                     .asText();
         }
     }
+
+    public String llama3Response(IAPropmptRequest request) throws IOException {
+        // Create the request body
+        Map<String, Object> requestBodyMap = new HashMap<>();
+        requestBodyMap.put("model", "llama3");
+        requestBodyMap.put("prompt", request.getNewPrompt());
+        requestBodyMap.put("stream", false);
+
+        String requestBody = objectMapper.writeValueAsString(requestBodyMap);
+
+        // Create the HTTP request
+        Request httpRequest = new Request.Builder()
+                .url("http://localhost:11434/api/generate")
+                .addHeader("Content-Type", "application/json")
+                .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                .build();
+
+        // Send the request and process the response
+        try (Response response = client.newCall(httpRequest).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Error in request: " + response.code() + " - " + response.message());
+            }
+
+            // Process the response
+            String responseBody = response.body().string();
+
+            // Assuming the response is a JSON object with a "response" field
+            return objectMapper.readTree(responseBody)
+                    .path("response")
+                    .asText();
+        }
+    }
+
 }

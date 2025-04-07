@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import okhttp3.*;
+import org.app.Exceptions.CustomHttpException;
 import org.app.Exceptions.IAException;
 import org.app.model.Language;
 import org.app.model.entity.User;
@@ -281,7 +282,7 @@ public class ResumeAgentService {
             }
         }
 
-        // Se chegou aqui, significa que houve 10 erros consecutivos
-        throw new IAException("Falha após muitas tentativas. Último erro: " + (lastException != null ? lastException.getMessage() : "Desconhecido"));
+        // Se chegou aqui, significa que todas as chaves foram consumidas e ainda há erro
+        throw new CustomHttpException("Todas as chaves de API foram consumidas até o limite.", 429);
     }
 }
