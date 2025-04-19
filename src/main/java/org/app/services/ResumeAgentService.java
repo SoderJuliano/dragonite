@@ -11,6 +11,7 @@ import org.app.model.Language;
 import org.app.model.entity.User;
 import org.app.model.requests.IAPropmptRequest;
 import org.app.repository.IAPropmpRepository;
+import org.app.repository.UserRepository;
 import org.app.utils.LocalLog;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +33,7 @@ public class ResumeAgentService {
     public static final String API_KEY6 = getSecret("aimlapi.com_KEY6");
     public static final String API_KEY7 = getSecret("aimlapi.com_KEY7");
     public static final String API_KEY8 = getSecret("aimlapi.com_KEY8");
+    public static final String API_KEY9 = getSecret("aimlapi.com_KEY9");
 
     private ArrayList<String> keys = new ArrayList<>();
 
@@ -52,9 +54,11 @@ public class ResumeAgentService {
 
     private final OkHttpClient client = new OkHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final UserRepository userRepository;
 
-    public ResumeAgentService(IAPropmpRepository iaPropmpRepository) {
+    public ResumeAgentService(IAPropmpRepository iaPropmpRepository, UserRepository userRepository) {
         this.iaPropmpRepository = iaPropmpRepository;
+        this.userRepository = userRepository;
 
         keys.add(API_KEY0);
         keys.add(API_KEY1);
@@ -65,11 +69,12 @@ public class ResumeAgentService {
         keys.add(API_KEY6);
         keys.add(API_KEY7);
         keys.add(API_KEY8);
+        keys.add(API_KEY9);
     }
 
     public User generateResume(IAPropmptRequest request) {
 
-        handlePropmpts(request, iaPropmpRepository);
+        handlePropmpts(request, iaPropmpRepository, userRepository);
 
         ArrayList<String> systemPrompts = new ArrayList<>();
         ArrayList<String> userPrompts = new ArrayList<>();
@@ -217,20 +222,22 @@ public class ResumeAgentService {
         throw new IOException("Falha após muitas tentativas. Último erro: " + (lastException != null ? lastException.getMessage() : "Desconhecido"));
     }
 
-    public String improveText(String currentText, Language language) throws IOException {
+    public String improveText(IAPropmptRequest prompt) throws IOException {
         if (keys.isEmpty()) {
             throw new RuntimeException("API Key not found in secrets file");
         }
 
+        handlePropmpts(prompt, iaPropmpRepository, userRepository);
+
         Map<String, Object> systemMessage = new HashMap<>();
         systemMessage.put("role", "system");
-        systemMessage.put("content", language.equals(Language.ENGLISH) ?
+        systemMessage.put("content", prompt.getLanguage().equals(Language.ENGLISH) ?
                 "Improve the following text to make it more professional and concise, Only the sentence, no explanations." :
                 "Melhore esse texto e faça ele mais profissional. Apenas a frase em português, sem explicações.");
 
         Map<String, Object> userMessage = new HashMap<>();
         userMessage.put("role", "user");
-        userMessage.put("content", currentText);
+        userMessage.put("content", prompt.getNewPrompt());
 
         Map<String, Object> requestBodyMap = new HashMap<>();
         requestBodyMap.put("model", "mistralai/Mistral-7B-Instruct-v0.2");

@@ -39,6 +39,7 @@ public class User {
     LocalDateTime lastUpdated;
     LocalDateTime createdDate;
     ArrayList<String> otherInfos;
+    private boolean premium;
 
     // Constructors
     public User() {
@@ -47,7 +48,7 @@ public class User {
     public User(String _id, String name, String profession, String resume, List<String> competence,
                 List<String> social, List<String> grade, String ability, String avatarImg, String realImg,
                 Contact contact, String deleteToken, List<UserExperiences> experiences, String language,
-                List<SpokenLanguages> spokenLanguages, OtherExperiencies otherExperience) {
+                List<SpokenLanguages> spokenLanguages, OtherExperiencies otherExperience, boolean premium) {
         this.id = _id;
         this.name = name;
         this.profession = profession;
@@ -66,6 +67,7 @@ public class User {
         ZoneId timeZone = ZoneId.of("America/Sao_Paulo");
         this.createdDate = LocalDateTime.now(timeZone);
         this.otherExperiencies = otherExperience;
+        this.premium = premium;
     }
 
     // Getters and Setters
@@ -258,7 +260,7 @@ public class User {
     @Override
     public String toString() {
         return "User{" +
-                "_id='" + id + '\'' +
+                "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", profession='" + profession + '\'' +
                 ", resume='" + resume + '\'' +
@@ -272,7 +274,22 @@ public class User {
                 ", actived=" + actived +
                 ", activationCode='" + activationCode + '\'' +
                 ", deleteToken='" + deleteToken + '\'' +
-                ", experiences=" + userExperiences +
+                ", userExperiences=" + userExperiences +
+                ", otherExperiencies=" + otherExperiencies +
+                ", language='" + language + '\'' +
+                ", spokenLanguages=" + spokenLanguages +
+                ", lastUpdated=" + lastUpdated +
+                ", createdDate=" + createdDate +
+                ", otherInfos=" + otherInfos +
+                ", premium=" + premium +
                 '}';
+    }
+
+    public boolean isPremium() {
+        return premium;
+    }
+
+    public void setPremium(boolean premium) {
+        this.premium = premium;
     }
 }

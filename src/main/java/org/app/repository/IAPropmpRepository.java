@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface IAPropmpRepository extends MongoRepository<IAPrompt, String> {
 
     Optional<IAPrompt> findByIp(String ip);
+
+    Optional<IAPrompt> findByUserEmail(String email);
 }

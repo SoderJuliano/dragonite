@@ -23,9 +23,13 @@ public record UserRecord(
         OtherExperiencies otherExperiencies,
         List<UserExperiences> userExperiences,
         String language,
-        List<SpokenLanguages> spokenLanguages
+        List<SpokenLanguages> spokenLanguages,
+        boolean premium
 ){
         public UserRecord() {
-                this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+                this(null, null, null, null, null, null,
+                        null, null, null, null, null, null,
+                        null, null, null,
+                        null, false);
         }
 }

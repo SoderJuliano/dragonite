@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import org.app.model.requests.IAPropmptRequest;
 import org.app.repository.IAPropmpRepository;
+import org.app.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -20,12 +21,17 @@ public class IAService {
     private final OkHttpClient client = new OkHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final IAPropmpRepository iaPropmpRepository;
+    private final UserRepository userRepository;
 
-    public IAService(IAPropmpRepository iaPropmpRepository) {
+    public IAService(IAPropmpRepository iaPropmpRepository, UserRepository userRepository) {
         this.iaPropmpRepository = iaPropmpRepository;
+        this.userRepository = userRepository;
     }
 
     public String generateText(IAPropmptRequest prompt) throws IOException {
+
+//        FAIL FAST
+        handlePropmpts(prompt, iaPropmpRepository, userRepository);
 
         String apiKey = getSecret("OPENAI_API_KEY");
         if (apiKey == null || apiKey.isEmpty()) {
@@ -62,8 +68,6 @@ public class IAService {
             // Processa a resposta
             String responseBody = response.body().string();
 
-            handlePropmpts(prompt, iaPropmpRepository);
-
             return objectMapper.readTree(responseBody)
                     .path("choices")
                     .get(0)
@@ -74,6 +78,11 @@ public class IAService {
     }
 
     public String llama3Response(IAPropmptRequest request) throws IOException {
+
+//        Fail fast
+        handlePropmpts(request, iaPropmpRepository, userRepository);
+
+
         // Create the request body
         Map<String, Object> requestBodyMap = new HashMap<>();
         requestBodyMap.put("model", "llama3");

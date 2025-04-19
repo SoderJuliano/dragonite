@@ -29,7 +29,7 @@ public class IAController {
             throw new BadRequestException("Call /generate-cv endpoint insted!");
         }
 
-        return resumeAgentService.improveText(prompt.getNewPrompt(), prompt.getLanguage());
+        return resumeAgentService.improveText(prompt);
     }
 
     @PostMapping("/generate-cv")
