@@ -18,3 +18,12 @@ spring:
 
 server:
   port: 5200
+
+paypal:
+  api:
+    url: https://api.paypal.com
+  webhook:
+    id: ${PAYPAL_WEBHOOK_ID}
+  client:
+    id: ${PAYPAL_CLIENT_ID}
+    secret: ${PAYPAL_CLIENT_SECRET}

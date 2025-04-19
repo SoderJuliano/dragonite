@@ -400,6 +400,13 @@ public class UserServiceImpl implements UserService {
         return recoverPassword(user.getId(), request.host());
     }
 
+    @Override
+    public void grantPremiumAccess(String id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("Not found user for id " + id));
+        user.setPremium(true);
+        userRepository.save(user);
+    }
+
     private User getUserbyId(String id) {
         Optional<User> userOptional = userRepository.findById(id);
         if (userOptional.isEmpty()) {
