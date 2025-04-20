@@ -1,5 +1,6 @@
 package org.app.model.entity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -7,14 +8,22 @@ import org.springframework.data.annotation.Id;
 import java.time.LocalDateTime;
 
 @Document(collection = "payments")
+@Schema(description = "Representa um pagamento realizado.")
 public class Payment {
     @Id
+    @Schema(description = "ID gerado pelo MongoDB", hidden = true)
     private String id;           // ID gerado pelo MongoDB
+    @Schema(description = "ID do pagamento no PayPal", example = "PAYID-1234567890ABCDEF")
     private String paymentId;    // ID do PayPal (ex.: "PAYID-123456")
+    @Schema(description = "ID do usuário no sistema", example = "user_12345")
     private String userId;       // ID do usuário no seu sistema
+    @Schema(description = "E-mail do cliente", example = "cliente@exemplo.com")
     private String email;        // Email do cliente
+    @Schema(description = "Valor do pagamento em USD", example = "50.75")
     private double amount;       // Valor em USD
+    @Schema(description = "Status do pagamento", allowableValues = {"PENDENTE", "CONCLUIDO", "ESTORNADO"}, example = "PENDENTE")
     private String status;      // "PENDENTE", "CONCLUIDO", "ESTORNADO"
+    @Schema(description = "Data de criação do pagamento", example = "2025-04-19T12:30:02.112Z")
     private LocalDateTime createdAt;
 
     public Payment(String id, String paymentId, String userId, String email, double amount, String status, LocalDateTime createdAt) {

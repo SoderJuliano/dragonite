@@ -19,11 +19,10 @@ spring:
 server:
   port: 5200
 
+
 paypal:
   api:
-    url: https://api.paypal.com
-  webhook:
-    id: ${PAYPAL_WEBHOOK_ID}
+    url: https://sandbox.paypal.com
   client:
-    id: ${PAYPAL_CLIENT_ID}
-    secret: ${PAYPAL_CLIENT_SECRET}
+    id: AWPLGXgpQAvKpsxqlMKdGL9b8jR6hZ8MfRePvvvIs7LaoqbWyDfQnMNJqI2f1m7LIZfQC4KuOO93QW2B
+    secret: EIweaiB17BmBn0QvMjgZ0n9dKiTzRyeeeyGHlB97u-OSP2sDUfrKFxyx0_HEUzSa78nuiFrSMFhegYnK

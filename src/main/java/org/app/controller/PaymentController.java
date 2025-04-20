@@ -1,20 +1,24 @@
 package org.app.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.*;
 import org.app.model.entity.Payment;
 import org.app.repository.PaymentRepository;
 import org.app.services.UserService;
-import org.app.utils.PayPalWebhookValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import okhttp3.FormBody;
+import org.springframework.web.bind.annotation.RequestBody;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+@CrossOrigin(origins = "http://localhost:8080", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/payments")
 public class PaymentController {
@@ -23,8 +27,21 @@ public class PaymentController {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private PayPalWebhookValidator payPalWebhookValidator;
+    @Value("${paypal.client.id}")
+    private String clientId;
+
+    @Value("${paypal.client.secret}")
+    private String clientSecret;
+
+    @Value("${paypal.api.url}")
+    private String paypalApiUrl;
+
+    private final OkHttpClient httpClient = new OkHttpClient();
+
+//    Meu app não esta com ip fixo nem com host fixo, então é impossível
+//    cadastrar um host para webhook por enquanto
+//    @Autowired
+//    private PayPalWebhookValidator payPalWebhookValidator;
 
     @PostMapping("/create")
     public ResponseEntity<String> createPayment(@RequestBody Payment request) {
@@ -45,25 +62,62 @@ public class PaymentController {
         return paymentRepository.findByUserId(userId);  // Consulta no MongoDB
     }
 
-    @PostMapping("/webhook")
-    public ResponseEntity<String> handleWebhook(@RequestBody String payload, @RequestHeader("PAYPAL-SIGNATURE") String signature) throws JsonProcessingException {
-        // 1. Valida a assinatura (exemplo simplificado)
-        if (!payPalWebhookValidator.validateWebhook(payload, signature)) {
-            return ResponseEntity.status(403).body("Assinatura inválida");
+    @GetMapping("/confirm/{paymentId}")
+    public ResponseEntity<String> confirmPayment(@PathVariable String paymentId) throws IOException {
+        String accessToken = getAccessToken();
+
+        Request request = new Request.Builder()
+                .url(paypalApiUrl + "/v2/checkout/orders/" + paymentId)
+                .header("Authorization", "Bearer " + accessToken)
+                .build();
+
+        try (Response response = httpClient.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                return ResponseEntity.status(response.code()).body("Erro ao consultar PayPal");
+            }
+
+            String body = response.body().string();
+            JsonNode json = new ObjectMapper().readTree(body);
+
+            String status = json.get("status").asText();  // Ex: "COMPLETED"
+            if (!"COMPLETED".equalsIgnoreCase(status)) {
+                return ResponseEntity.ok("Pagamento ainda não concluído. Status: " + status);
+            }
+
+            // Atualiza seu banco de dados
+            Payment payment = paymentRepository.findByPaymentId(paymentId);
+            if (payment == null) {
+                return ResponseEntity.status(404).body("Pagamento não encontrado");
+            }
+
+            payment.setStatus("CONCLUIDO");
+            paymentRepository.save(payment);
+
+            // Libera acesso
+            userService.grantPremiumAccess(payment.getUserId());
+
+            return ResponseEntity.ok("Pagamento confirmado e acesso liberado!");
         }
+    }
 
-        // 2. Extrai o ID do pagamento
-        JsonNode json = new ObjectMapper().readTree(payload);
-        String paypalPaymentId = json.get("resource").get("id").asText();
+    private String getAccessToken() throws IOException {
+        String credential = Credentials.basic(clientId, clientSecret);
 
-        // 3. Atualiza o status no MongoDB
-        Payment payment = paymentRepository.findByPaymentId(paypalPaymentId);
-        payment.setStatus("CONCLUIDO");
-        paymentRepository.save(payment);
+        okhttp3.RequestBody formBody = new FormBody.Builder()
+                .add("grant_type", "client_credentials")
+                .build();
 
-        // 4. Libera acesso ao usuário (ex.: atualiza seu serviço de usuários)
-        userService.grantPremiumAccess(payment.getUserId());
+        Request request = new Request.Builder()
+                .url(paypalApiUrl + "/v1/oauth2/token")
+                .header("Authorization", credential)
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .post(formBody)
+                .build();
 
-        return ResponseEntity.ok("Webhook processado");
+        try (Response response = httpClient.newCall(request).execute()) {
+            String responseBody = response.body().string();
+            JsonNode json = new ObjectMapper().readTree(responseBody);
+            return json.get("access_token").asText();
+        }
     }
 }
