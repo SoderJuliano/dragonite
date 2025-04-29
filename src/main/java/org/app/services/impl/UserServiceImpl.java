@@ -189,20 +189,45 @@ public class UserServiceImpl implements UserService {
         );
 
         LocalLog.log(":positive New login created for " + login.email());
-        String token = UUID.randomUUID().toString();
-        String key = login.email()+login.userId();
 
-        twoStepService.sendEmail(login.email(), token, "[en]Your confirmation token/[pt]Código de confirmação");
-        twoStepService.sendMessage(login.email(), "[en]We've sent a confirmation code to your email." +
-                        "[pt]Enviamos um código de confirmação para seu email. E-mail: "+login.email(),
-                "Please confirm your account", key);
-        log(":receive_email Sent confirmation account email and message to user "+login.email());
-
-        user.setActivationCode(token);
-        user.setActived(false);
-        userRepository.save(user);
+        sendConfirmationCode(login, user);
 
         return newLogin;
+    }
+
+    private void sendConfirmationCode(Login login, User user) {
+        String token = UUID.randomUUID().toString();
+        int numericCode = Math.abs(token.hashCode()) % 10_000_000;
+        String sevenDigitCode = String.format("%07d", numericCode);
+
+        String key = login.email()+ login.userId();
+
+        twoStepService.sendEmail(login.email(), sevenDigitCode, "[en]Your confirmation token/[pt]Código de confirmação");
+        twoStepService.sendMessage(login.email(), "[en]We've sent a confirmation code to your email." +
+                        "[pt]Enviamos um código de confirmação para seu email. E-mail: "+ login.email(),
+                "Please confirm your account", key);
+        log(":receive_email Sent confirmation account email and message to user "+ login.email());
+
+        user.setActivationCode(sevenDigitCode);
+        user.setActived(false);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void resendEmail(String email, String lang) {
+        List<Login> login = loginRepository.findByEmailAndLanguage(email, lang);
+
+        if(login.isEmpty()) {
+            new BadRequestException("No login for "+email);
+        }
+
+        Optional<User> user = userRepository.findFirstByEmailAndLanguage(email, lang);
+
+        if(!user.isPresent()) {
+            new BadRequestException("No user for "+email);
+        }
+
+        sendConfirmationCode(login.get(0), user.get());
     }
 
     @Override

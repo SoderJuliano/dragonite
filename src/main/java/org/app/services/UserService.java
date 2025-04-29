@@ -38,4 +38,6 @@ public interface UserService {
     public DefaultAnswer recoverPasswordByEmail(String email, String language, FrontHost request);
 
     public void grantPremiumAccess(String id);
+
+    public void resendEmail(String email, String lang);
 }
