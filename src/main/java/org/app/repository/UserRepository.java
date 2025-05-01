@@ -27,7 +27,7 @@ public interface UserRepository extends MongoRepository<User, String> {
     //{ "contact": { "email": "user@example.com" }, "premium": true, "language": "pt-br" }
     //{ "contact": { "email": "user@example.com" }, "premium": true, "language": "en-us" }
     @Query("{ 'contact.email' : ?0, 'premium' : true }")
-    boolean hasPremiumAccount(String email);
+    Boolean hasPremiumAccount(String email);
 
 }
 

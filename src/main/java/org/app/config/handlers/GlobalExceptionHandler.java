@@ -64,4 +64,10 @@ public class GlobalExceptionHandler {
         DefaultAnswer errorResponse = new DefaultAnswer(ex);
         return new ResponseEntity<>(errorResponse, HttpStatus.valueOf(ex.getStatusCode()));
     }
+
+    @ExceptionHandler(IAException.class)
+    public ResponseEntity<DefaultAnswer> handleIAException(IAException iaex) {
+        DefaultAnswer errorResponse = new DefaultAnswer(iaex);
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
 }

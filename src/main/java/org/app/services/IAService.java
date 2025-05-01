@@ -2,6 +2,7 @@ package org.app.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
+import org.app.model.IAPrompt;
 import org.app.model.requests.IAPropmptRequest;
 import org.app.repository.IAPropmpRepository;
 import org.app.repository.UserRepository;
@@ -31,7 +32,7 @@ public class IAService {
     public String generateText(IAPropmptRequest prompt) throws IOException {
 
 //        FAIL FAST
-        handlePropmpts(prompt, iaPropmpRepository, userRepository);
+        IAPrompt dbPrompt = handlePropmpts(prompt, iaPropmpRepository, userRepository);
 
         String apiKey = getSecret("OPENAI_API_KEY");
         if (apiKey == null || apiKey.isEmpty()) {
@@ -62,25 +63,32 @@ public class IAService {
         // Envia a solicitação e processa a resposta
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
+                dbPrompt.setResponseInLastIndex("Erro na solicitação: " + response.code() + " - " + response.message());
+                dbPrompt.updateLastUpdate();
+                iaPropmpRepository.save(dbPrompt);
                 throw new IOException("Erro na solicitação: " + response.code() + " - " + response.message());
             }
 
             // Processa a resposta
             String responseBody = response.body().string();
 
-            return objectMapper.readTree(responseBody)
+            String serviceResponse = objectMapper.readTree(responseBody)
                     .path("choices")
                     .get(0)
                     .path("message")
                     .path("content")
                     .asText();
+
+            dbPrompt.setResponseInLastIndex(serviceResponse);
+            iaPropmpRepository.save(dbPrompt);
+            return serviceResponse;
         }
     }
 
     public String llama3Response(IAPropmptRequest request) throws IOException {
 
 //        Fail fast
-        handlePropmpts(request, iaPropmpRepository, userRepository);
+        IAPrompt dbPrompt = handlePropmpts(request, iaPropmpRepository, userRepository);
 
 
         // Create the request body
@@ -108,9 +116,14 @@ public class IAService {
             String responseBody = response.body().string();
 
             // Assuming the response is a JSON object with a "response" field
-            return objectMapper.readTree(responseBody)
+            String llamaResponse = objectMapper.readTree(responseBody)
                     .path("response")
                     .asText();
+
+            dbPrompt.setResponseInLastIndex(llamaResponse);
+            dbPrompt.updateLastUpdate();
+            iaPropmpRepository.save(dbPrompt);
+            return llamaResponse;
         }
     }
 

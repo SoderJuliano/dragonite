@@ -3,6 +3,7 @@ package org.app.utils;
 import org.app.Exceptions.BadRequestException;
 import org.app.Exceptions.IAException;
 import org.app.model.IAPrompt;
+import org.app.model.Prompt;
 import org.app.model.requests.IAPropmptRequest;
 import org.app.repository.IAPropmpRepository;
 import org.app.repository.UserRepository;
@@ -10,6 +11,7 @@ import org.app.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Objects;
 
 import static org.app.model.Language.PORTUGUESE;
 
@@ -60,13 +62,13 @@ public class AgentServiceUtil {
      * @param iaPropmpRepository O repositório utilizado para buscar e salvar dados de prompts.
      * @throws BadRequestException Se o limite de prompts for excedido e o usuário não tiver uma conta premium.
      */
-    public static void handlePropmpts(IAPropmptRequest prompt, IAPropmpRepository iaPropmpRepository,
+    public static IAPrompt handlePropmpts(IAPropmptRequest prompt, IAPropmpRepository iaPropmpRepository,
                                       UserRepository userRepository) {
         IAPrompt baseIAPrompt = iaPropmpRepository.findByIp(prompt.getIp())
                 .orElseGet(() -> {
                     IAPrompt newIAPrompt = new IAPrompt(
                             prompt.getIp(),
-                            new ArrayList<>(Collections.singletonList(prompt.getNewPrompt())),
+                            new ArrayList<>(),
                             false,
                             prompt.getEmail(),
                             LocalDateTime.now(),
@@ -84,15 +86,18 @@ public class AgentServiceUtil {
             throw new BadRequestException(":money_bag IA busy, try again in a few minutes");
         }
 
-        ArrayList<String> prompts = baseIAPrompt.getPrompts();
-        prompts.add(prompt.getNewPrompt());
+        ArrayList<Prompt> prompts = baseIAPrompt.getPrompts();
+
+        prompts.add(new Prompt(prompt.getNewPrompt(), null));
+
         baseIAPrompt.setPrompts(prompts);
         baseIAPrompt.updateLastUpdate();
-        iaPropmpRepository.save(baseIAPrompt);
+        return iaPropmpRepository.save(baseIAPrompt);
     }
 
     private static boolean canIUserAINow(IAPrompt baseIAPrompt, UserRepository userRepository) {
-        return baseIAPrompt.getPrompts().size() <= 20 || userRepository.hasPremiumAccount(baseIAPrompt.getUserEmail());
+        return baseIAPrompt.getPrompts().size() <= 20
+                || Boolean.TRUE.equals(userRepository.hasPremiumAccount(baseIAPrompt.getUserEmail()));
     }
 
     private static String getErrorMessage(boolean isPt) {

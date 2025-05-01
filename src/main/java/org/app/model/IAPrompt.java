@@ -16,7 +16,7 @@ public class IAPrompt {
     private ObjectId _id;
     @NotNull
     private String ip;
-    private ArrayList<String> prompts;
+    private ArrayList<Prompt> prompts;
     private boolean agent;
     private String userEmail;
     private LocalDateTime createDate;
@@ -26,7 +26,7 @@ public class IAPrompt {
         // empty
     }
 
-    public IAPrompt(ObjectId _id, String ip, ArrayList<String> prompts, boolean agent, String userEmail,
+    public IAPrompt(ObjectId _id, String ip, ArrayList<Prompt> prompts, boolean agent, String userEmail,
                     LocalDateTime createDate, LocalDateTime updateDate) {
         this._id = _id;
         this.ip = ip;
@@ -37,7 +37,7 @@ public class IAPrompt {
         this.updateDate = updateDate;
     }
 
-    public IAPrompt(String ip, ArrayList<String> prompts, boolean agent, String userEmail, LocalDateTime updateDate) {
+    public IAPrompt(String ip, ArrayList<Prompt> prompts, boolean agent, String userEmail, LocalDateTime updateDate) {
         this.ip = ip;
         this.prompts = prompts;
         this.agent = agent;
@@ -45,7 +45,7 @@ public class IAPrompt {
         this.updateDate = updateDate;
     }
 
-    public IAPrompt(String ip, ArrayList<String> prompts, boolean agent, String userEmail,
+    public IAPrompt(String ip, ArrayList<Prompt> prompts, boolean agent, String userEmail,
                     LocalDateTime createDate , LocalDateTime updateDate) {
         this.ip = ip;
         this.prompts = prompts;
@@ -71,11 +71,11 @@ public class IAPrompt {
         this.ip = ip;
     }
 
-    public ArrayList<String> getPrompts() {
+    public ArrayList<Prompt> getPrompts() {
         return prompts;
     }
 
-    public void setPrompts(ArrayList<String> prompts) {
+    public void setPrompts(ArrayList<Prompt> prompts) {
         this.prompts = prompts;
     }
 
@@ -102,4 +102,13 @@ public class IAPrompt {
     public void updateLastUpdate() {
         this.updateDate = LocalDateTime.now();
     }
+
+    public void setResponseInLastIndex(String response) {
+        if(!prompts.isEmpty()) prompts.get(prompts.size() - 1).setResponse(response);
+    }
+
+    public Prompt getLastPrompt() {
+        return prompts.isEmpty() ? null : prompts.get(prompts.size() - 1);
+    }
 }
+
