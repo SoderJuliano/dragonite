@@ -10,8 +10,6 @@ import org.app.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Objects;
 
 import static org.app.model.Language.PORTUGUESE;
 
@@ -82,7 +80,7 @@ public class AgentServiceUtil {
             throw new IAException(getErrorMessage(isPt));
         }
 
-        if (baseIAPrompt.getPrompts().size() > 20 && baseIAPrompt.getLastUpdate().plusMinutes(5).isBefore(LocalDateTime.now())) {
+        if (baseIAPrompt.getPrompts().size() > 20 && LocalDateTime.now().isBefore(baseIAPrompt.getLastUpdate().plusMinutes(5))) {
             throw new BadRequestException(":money_bag IA busy, try again in a few minutes");
         }
 

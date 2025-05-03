@@ -58,7 +58,7 @@ public class UserServiceImpl implements UserService {
 
         if(userRepository.existsByContactEmailAndLanguage(userRecord.contact().email().get(0),
                 userRecord.language())) {
-            logErr(":negative this email already exist in the database"+userRecord.contact().email().get(0));
+            logErr(":negative this email already exist in the database "+userRecord.contact().email().get(0));
             throw new IllegalArgumentException("Can not save those informations");
         }
 
@@ -172,16 +172,23 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Login newLogin(Login login) throws UnsupportedEncodingException {
-        User user = userRepository.findById(login.userId()).orElseThrow(() -> {
-            logErr(":negative User do not exist for " + login.email());
-            return new BadRequestException("Can't do login");
-        });
+        Optional<User> user = null;
+        String userId = login.userId();
+        user = userRepository.findById(userId);
+
+        if(user.isEmpty()) {
+            user = Optional.ofNullable(userRepository.findFirstByEmailAndLanguage(login.email(), login.language()).orElseThrow(() -> {
+                logErr(":negative User do not exist for " + login.email());
+                return new BadRequestException("Can't do login");
+            }));
+            userId = user.get().getId();
+        }
 
         Login newLogin = loginRepository.insert(
                 new Login(
                         login.email(),
                         hashPassword(login.password()),
-                        login.userId(),
+                        userId,
                         LocalDateTime.now(),
                         LocalDateTime.now(),
                         login.language()
@@ -190,7 +197,7 @@ public class UserServiceImpl implements UserService {
 
         LocalLog.log(":positive New login created for " + login.email());
 
-        sendConfirmationCode(login, user);
+        sendConfirmationCode(login, user.get());
 
         return newLogin;
     }
@@ -218,13 +225,13 @@ public class UserServiceImpl implements UserService {
         List<Login> login = loginRepository.findByEmailAndLanguage(email, lang);
 
         if(login.isEmpty()) {
-            new BadRequestException("No login for "+email);
+            throw new BadRequestException("No login for "+email);
         }
 
         Optional<User> user = userRepository.findFirstByEmailAndLanguage(email, lang);
 
         if(!user.isPresent()) {
-            new BadRequestException("No user for "+email);
+            throw new BadRequestException("No user for "+email);
         }
 
         sendConfirmationCode(login.get(0), user.get());
