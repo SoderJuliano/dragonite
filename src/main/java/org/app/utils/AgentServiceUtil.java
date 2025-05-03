@@ -2,6 +2,7 @@ package org.app.utils;
 
 import org.app.Exceptions.BadRequestException;
 import org.app.Exceptions.IAException;
+import org.app.Exceptions.RateLimitExceededException;
 import org.app.model.IAPrompt;
 import org.app.model.Prompt;
 import org.app.model.requests.IAPropmptRequest;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 import static org.app.model.Language.PORTUGUESE;
+import static org.app.services.RateLimitChecker.checkAndUpdateRateLimit;
 
 
 /**
@@ -61,7 +63,7 @@ public class AgentServiceUtil {
      * @throws BadRequestException Se o limite de prompts for excedido e o usuário não tiver uma conta premium.
      */
     public static IAPrompt handlePropmpts(IAPropmptRequest prompt, IAPropmpRepository iaPropmpRepository,
-                                      UserRepository userRepository) {
+                                          UserRepository userRepository) {
         IAPrompt baseIAPrompt = iaPropmpRepository.findByIp(prompt.getIp())
                 .orElseGet(() -> {
                     IAPrompt newIAPrompt = new IAPrompt(
@@ -80,8 +82,12 @@ public class AgentServiceUtil {
             throw new IAException(getErrorMessage(isPt));
         }
 
-        if (baseIAPrompt.getPrompts().size() > 20 && LocalDateTime.now().isBefore(baseIAPrompt.getLastUpdate().plusMinutes(5))) {
-            throw new BadRequestException(":money_bag IA busy, try again in a few minutes");
+        try {
+            checkAndUpdateRateLimit(baseIAPrompt);
+        } catch (RateLimitExceededException e) {
+            LocalLog.logErr(":money_bag  Too many request in less then 5 minutes for ip "+baseIAPrompt.getIp()
+            + "and email "+baseIAPrompt.getUserEmail());
+            throw e;
         }
 
         ArrayList<Prompt> prompts = baseIAPrompt.getPrompts();
