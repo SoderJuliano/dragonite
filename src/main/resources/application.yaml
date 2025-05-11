@@ -1,11 +1,16 @@
 spring:
   jackson:
-      time-zone: America/Sao_Paulo
+    time-zone: America/Sao_Paulo
   servlet:
     encoding:
       charset: UTF-8
       enabled: true
       force: true
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  server:
+    max-http-header-size: 50MB
 
   data:
     mongodb:
@@ -17,8 +22,7 @@ spring:
       grid-fs-database: gridfs
 
 server:
-  port: 5200
-
+  port: 5300
 
 paypal:
   api:

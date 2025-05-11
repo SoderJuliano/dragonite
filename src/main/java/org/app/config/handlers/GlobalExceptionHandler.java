@@ -20,7 +20,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
-        LocalLog.logErr(":skull An unexpected runtime error occurred");
+        LocalLog.logErr(":skull An unexpected runtime error occurred"+ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(parseEmojis(":skull An unexpected runtime error occurred"));
     }
 
