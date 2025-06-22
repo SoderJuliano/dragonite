@@ -141,4 +141,11 @@ public class UserController {
 
         return ResponseEntity.status(200).body(userService.recoverPasswordByEmail(decodedEmail, language, request));
     }
+
+    @PostMapping(path = "/resendConfirmationAccEmail/{email}/{language}")
+    public ResponseEntity<DefaultAnswer> resendConfirmationAccEmail(@PathVariable String email,
+                                                                    @PathVariable String language) {
+        userService.resendEmail(email, language);
+        return ResponseEntity.ok(new DefaultAnswer());
+    }
 }

@@ -1,6 +1,10 @@
 package org.app.utils;
 
-import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Commons {
 
@@ -11,6 +15,8 @@ public class Commons {
     public static <T> boolean isEmpty(T value) {
         if(value instanceof String val) {
             return val.isEmpty();
+        } else if (value instanceof ArrayList<?> a) {
+            return a.isEmpty();
         }
         return value == null;
     }
@@ -35,5 +41,22 @@ public class Commons {
         }
 
         return null;
+    }
+
+    public static String extractJsonFromString(String string) {
+        // Regex para capturar o conteúdo entre ```json e ```
+        Pattern pattern = Pattern.compile("```json\\s*(.*?)\\s*```", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(string);
+
+        if (matcher.find()) {
+            return matcher.group(1); // Retorna o JSON capturado
+        } else {
+            try {
+                new ObjectMapper().readTree(string);
+                return string; // Retorna a string diretamente se for um JSON válido
+            } catch (Exception e) {
+                throw new RuntimeException("JSON não encontrado na resposta: " + string);
+            }
+        }
     }
 }

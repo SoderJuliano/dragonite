@@ -58,7 +58,7 @@ public class UserServiceImpl implements UserService {
 
         if(userRepository.existsByContactEmailAndLanguage(userRecord.contact().email().get(0),
                 userRecord.language())) {
-            logErr(":negative this email already exist in the database"+userRecord.contact().email().get(0));
+            logErr(":negative this email already exist in the database "+userRecord.contact().email().get(0));
             throw new IllegalArgumentException("Can not save those informations");
         }
 
@@ -172,16 +172,23 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Login newLogin(Login login) throws UnsupportedEncodingException {
-        User user = userRepository.findById(login.userId()).orElseThrow(() -> {
-            logErr(":negative User do not exist for " + login.email());
-            return new BadRequestException("Can't do login");
-        });
+        Optional<User> user = null;
+        String userId = login.userId();
+        user = userRepository.findById(userId);
+
+        if(user.isEmpty()) {
+            user = Optional.ofNullable(userRepository.findFirstByEmailAndLanguage(login.email(), login.language()).orElseThrow(() -> {
+                logErr(":negative User do not exist for " + login.email());
+                return new BadRequestException("Can't do login");
+            }));
+            userId = user.get().getId();
+        }
 
         Login newLogin = loginRepository.insert(
                 new Login(
                         login.email(),
                         hashPassword(login.password()),
-                        login.userId(),
+                        userId,
                         LocalDateTime.now(),
                         LocalDateTime.now(),
                         login.language()
@@ -189,20 +196,45 @@ public class UserServiceImpl implements UserService {
         );
 
         LocalLog.log(":positive New login created for " + login.email());
-        String token = UUID.randomUUID().toString();
-        String key = login.email()+login.userId();
 
-        twoStepService.sendEmail(login.email(), token, "[en]Your confirmation token/[pt]Código de confirmação");
-        twoStepService.sendMessage(login.email(), "[en]We've sent a confirmation code to your email." +
-                        "[pt]Enviamos um código de confirmação para seu email. E-mail: "+login.email(),
-                "Please confirm your account", key);
-        log(":receive_email Sent confirmation account email and message to user "+login.email());
-
-        user.setActivationCode(token);
-        user.setActived(false);
-        userRepository.save(user);
+        sendConfirmationCode(login, user.get());
 
         return newLogin;
+    }
+
+    private void sendConfirmationCode(Login login, User user) {
+        String token = UUID.randomUUID().toString();
+        int numericCode = Math.abs(token.hashCode()) % 10_000_000;
+        String sevenDigitCode = String.format("%07d", numericCode);
+
+        String key = login.email()+ login.userId();
+
+        twoStepService.sendEmail(login.email(), sevenDigitCode, "[en]Your confirmation token/[pt]Código de confirmação");
+        twoStepService.sendMessage(login.email(), "[en]We've sent a confirmation code to your email." +
+                        "[pt]Enviamos um código de confirmação para seu email. E-mail: "+ login.email(),
+                "Please confirm your account", key);
+        log(":receive_email Sent confirmation account email and message to user "+ login.email());
+
+        user.setActivationCode(sevenDigitCode);
+        user.setActived(false);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void resendEmail(String email, String lang) {
+        List<Login> login = loginRepository.findByEmailAndLanguage(email, lang);
+
+        if(login.isEmpty()) {
+            throw new BadRequestException("No login for "+email);
+        }
+
+        Optional<User> user = userRepository.findFirstByEmailAndLanguage(email, lang);
+
+        if(!user.isPresent()) {
+            throw new BadRequestException("No user for "+email);
+        }
+
+        sendConfirmationCode(login.get(0), user.get());
     }
 
     @Override
@@ -398,6 +430,13 @@ public class UserServiceImpl implements UserService {
     public DefaultAnswer recoverPasswordByEmail(String email, String language, FrontHost request) {
         User user = userRepository.findFirstByEmailAndLanguage(email, language).orElseThrow(() -> new NotFoundException("Not found user " + email));
         return recoverPassword(user.getId(), request.host());
+    }
+
+    @Override
+    public void grantPremiumAccess(String id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("Not found user for id " + id));
+        user.setPremium(true);
+        userRepository.save(user);
     }
 
     private User getUserbyId(String id) {

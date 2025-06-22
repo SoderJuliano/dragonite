@@ -36,4 +36,8 @@ public interface UserService {
     DefaultAnswer setPassword(String id, String password, String token, String email, String language);
 
     public DefaultAnswer recoverPasswordByEmail(String email, String language, FrontHost request);
+
+    public void grantPremiumAccess(String id);
+
+    public void resendEmail(String email, String lang);
 }

@@ -1,10 +1,7 @@
 package org.app.config.handlers;
 
 import com.mongodb.DuplicateKeyException;
-import org.app.Exceptions.BadRequestException;
-import org.app.Exceptions.NoPasswordException;
-import org.app.Exceptions.NotFoundException;
-import org.app.Exceptions.UnauthorizedException;
+import org.app.Exceptions.*;
 import org.app.model.common.DefaultAnswer;
 import org.app.utils.LocalLog;
 import org.springframework.http.HttpStatus;
@@ -23,7 +20,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
-        LocalLog.logErr(":skull An unexpected runtime error occurred");
+        LocalLog.logErr(":skull An unexpected runtime error occurred"+ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(parseEmojis(":skull An unexpected runtime error occurred"));
     }
 
@@ -60,5 +57,17 @@ public class GlobalExceptionHandler {
     public ResponseEntity<DefaultAnswer> handleNoPasswordException(NoPasswordException exception) {
         LocalLog.logErr(":lock "+ exception.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT.value()).body(new DefaultAnswer(exception));
+    }
+
+    @ExceptionHandler(CustomHttpException.class)
+    public ResponseEntity<DefaultAnswer> handleCustomHttpException(CustomHttpException ex) {
+        DefaultAnswer errorResponse = new DefaultAnswer(ex);
+        return new ResponseEntity<>(errorResponse, HttpStatus.valueOf(ex.getStatusCode()));
+    }
+
+    @ExceptionHandler(IAException.class)
+    public ResponseEntity<DefaultAnswer> handleIAException(IAException iaex) {
+        DefaultAnswer errorResponse = new DefaultAnswer(iaex);
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 }

@@ -22,5 +22,12 @@ public interface UserRepository extends MongoRepository<User, String> {
     boolean existsByActivationCodeAndId(String activationCode, String id);
 
     boolean existsByContactEmailAndLanguage(String email, String language);
+
+    //Aqui pra saber se tem conta premium tanto faz a conta entao da pra fazer uma busaca simples
+    //{ "contact": { "email": "user@example.com" }, "premium": true, "language": "pt-br" }
+    //{ "contact": { "email": "user@example.com" }, "premium": true, "language": "en-us" }
+    @Query("{ 'contact.email' : ?0, 'premium' : true }")
+    Boolean hasPremiumAccount(String email);
+
 }
 
