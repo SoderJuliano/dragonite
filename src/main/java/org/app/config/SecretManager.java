@@ -8,8 +8,10 @@ public class SecretManager {
     private static final Properties properties = new Properties();
 
     static {
-        String path = "/home/soder/Área de trabalho/app/secrets.txt";
+//        String path = "/home/soder/Área de trabalho/app/secrets.txt";
 //        String path = "/home/soder/Desktop/app/secrets.txt";
+        String path = "/home/julianos/Documents/app/secrets.txt";
+
         try (FileInputStream input = new FileInputStream(path)) {
             properties.load(input);
         } catch (IOException e) {
