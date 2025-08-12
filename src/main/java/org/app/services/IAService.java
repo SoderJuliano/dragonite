@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.app.config.SecretManager.getGeminiSecret;
 import static org.app.config.SecretManager.getSecret;
 import static org.app.utils.AgentServiceUtil.handlePropmpts;
 
