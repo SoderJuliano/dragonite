@@ -47,4 +47,9 @@ public class IAController {
         }
         return iaService.llama3Response(prompt);
     }
+
+    @PostMapping("/gemini")
+    public String generateTextWithGemini(@RequestBody IAPropmptRequest prompt) throws IOException {
+        return iaService.geminiResponse(prompt);
+    }
 }

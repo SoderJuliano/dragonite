@@ -1,0 +1,32 @@
+spring:
+  jackson:
+    time-zone: America/Sao_Paulo
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  server:
+    max-http-header-size: 50MB
+
+  data:
+    mongodb:
+      uri: ${mongodb.uri}
+      authentication-database: admin
+      auto-index-creation: true
+      write-concern: MAJORITY
+      read-preference: primary
+      grid-fs-database: gridfs
+
+server:
+  port: 5300
+
+paypal:
+  api:
+    url: https://sandbox.paypal.com
+  client:
+    id: AWPLGXgpQAvKpsxqlMKdGL9b8jR6hZ8MfRePvvvIs7LaoqbWyDfQnMNJqI2f1m7LIZfQC4KuOO93QW2B
+    secret: EIweaiB17BmBn0QvMjgZ0n9dKiTzRyeeeyGHlB97u-OSP2sDUfrKFxyx0_HEUzSa78nuiFrSMFhegYnK
