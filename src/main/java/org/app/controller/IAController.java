@@ -40,7 +40,7 @@ public class IAController {
         return resumeAgentService.generateResume(prompt);
     }
 
-    @PostMapping("/llama3")
+        @PostMapping("/llama3")
     public String generateTextWithLlama(@RequestBody IAPropmptRequest prompt) throws IOException {
         if (prompt.isAgent()) {
             throw new BadRequestException("Call /generate-cv endpoint insted!");

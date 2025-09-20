@@ -7,6 +7,7 @@ import org.app.model.IAPrompt;
 import org.app.model.requests.IAPropmptRequest;
 import org.app.repository.IAPropmpRepository;
 import org.app.repository.UserRepository;
+import org.app.utils.LocalLog;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -95,7 +96,7 @@ public class IAService {
 
     // Create the request body
     Map<String, Object> requestBodyMap = new HashMap<>();
-    requestBodyMap.put("model", "llama3");
+    requestBodyMap.put("model", "tinyllama");
     requestBodyMap.put("prompt", request.getNewPrompt());
     requestBodyMap.put("stream", false);
 
@@ -130,29 +131,62 @@ public class IAService {
   }
 
   private String findGeminiExecutable() throws IOException {
+    // 1. Check for GEMINI_PATH
+    String geminiPath = System.getenv("GEMINI_PATH");
+    if (geminiPath != null && !geminiPath.isEmpty()) {
+        return geminiPath;
+    }
+
+    // 2. Try standard PATH
     try {
-      ProcessBuilder processBuilder = new ProcessBuilder("which", "gemini");
-      Process process = processBuilder.start();
+        ProcessBuilder pb = new ProcessBuilder("which", "gemini");
+        Process p = pb.start();
+        if (p.waitFor() == 0) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                String path = reader.readLine();
+                if (path != null && !path.isEmpty()) return path;
+            }
+        }
+    } catch (Exception e) {
+        LocalLog.log("Standard 'which gemini' failed. PATH is: " + System.getenv("PATH") + ". Trying nvm-aware fallback.");
+    }
 
-      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-      String path = reader.readLine();
+    // 3. Fallback: Source nvm.sh and then try which
+    try {
+        ProcessBuilder pb = new ProcessBuilder("/bin/bash", "-c", ". /home/julianos/.config/nvm/nvm.sh && which gemini");
+        pb.redirectErrorStream(true); // Combine stdout and stderr
+        Process p = pb.start();
+        
+        StringBuilder output = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line);
+            }
+        }
 
-      int exitCode = process.waitFor();
-      if (exitCode != 0 || path == null || path.isEmpty()) {
-        throw new IOException("Gemini CLI not found in PATH. Please ensure it is installed and accessible.");
-      }
+        if (p.waitFor() == 0) {
+            String path = output.toString().trim();
+            if (!path.isEmpty()) return path;
+        }
+        
+        // If we are here, it failed. Throw with the output for debugging.
+        throw new IOException("NVM-aware fallback failed. Output: " + output.toString());
 
-      return path;
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new IOException("Failed to find Gemini CLI", e);
+    } catch (Exception e) {
+        throw new IOException("Failed to execute nvm-aware fallback.", e);
     }
   }
 
   public String geminiResponse(IAPropmptRequest prompt) throws IOException {
     try {
       String geminiPath = findGeminiExecutable();
-      ProcessBuilder processBuilder = new ProcessBuilder(geminiPath, "-p", prompt.getNewPrompt());
+
+      // Escape single quotes in the prompt to prevent shell injection
+      String escapedPrompt = prompt.getNewPrompt().replace("'", "'\\''");
+      String command = String.format(". /home/julianos/.config/nvm/nvm.sh && %s -p '%s'", geminiPath, escapedPrompt);
+
+      ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", command);
       processBuilder.redirectErrorStream(true); // Redirect error stream to input stream
 
       Process process = processBuilder.start();
@@ -167,14 +201,21 @@ public class IAService {
 
       int exitCode = process.waitFor();
       if (exitCode != 0) {
-        throw new IOException("Gemini CLI exited with error code " + exitCode + ". Output:\n" + output);
+        String errorMessage = "Gemini CLI exited with error code " + exitCode + ". Output:\n" + output;
+        LocalLog.logErr(errorMessage);
+        throw new IOException(errorMessage);
       }
 
       String finalOutput = output.toString().replace("Loaded cached credentials.", "").trim();
       return finalOutput;
 
     } catch (IOException | InterruptedException e) {
-      throw new RuntimeException("Failed to execute Gemini CLI", e);
+      if (e instanceof InterruptedException) {
+          Thread.currentThread().interrupt();
+      }
+      String errorMessage = "Failed to execute Gemini CLI: " + e.getMessage();
+      LocalLog.logErr(errorMessage);
+      throw new IOException(errorMessage, e);
     }
   }
 }

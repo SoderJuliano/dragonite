@@ -11,9 +11,9 @@ public class SecretManager {
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
   static {
-    // String path = "/home/soder/Área de trabalho/app/secrets.txt";
-    String path = "/home/soder/Desktop/app/secrets.txt";
-    // String path = "/home/julianos/Documentos/workdir/app/secrets.txt";
+//    String path = "/home/soder/Área de Trabalho/app/secrets.txt";
+    // String path = "/home/soder/Desktop/app/secrets.txt";
+     String path = "/home/julianos/Documentos/workdir/app/secrets.txt";
 
     try (FileInputStream input = new FileInputStream(path)) {
       properties.load(input);
