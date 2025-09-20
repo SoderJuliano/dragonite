@@ -16,6 +16,7 @@ import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.app.config.SecretManager.getSecret;
 import static org.app.utils.AgentServiceUtil.handlePropmpts;
@@ -89,10 +90,10 @@ public class IAService {
     }
   }
 
-  public String llama3Response(IAPropmptRequest request) throws IOException {
+    public String llama3Response(IAPropmptRequest request) throws IOException {
 
-    // Fail fast
-    IAPrompt dbPrompt = handlePropmpts(request, iaPropmpRepository, userRepository);
+        // Fail fast
+        IAPrompt dbPrompt = handlePropmpts(request, iaPropmpRepository, userRepository);
 
     // Create the request body
     Map<String, Object> requestBodyMap = new HashMap<>();
@@ -100,35 +101,44 @@ public class IAService {
     requestBodyMap.put("prompt", request.getNewPrompt());
     requestBodyMap.put("stream", false);
 
-    String requestBody = objectMapper.writeValueAsString(requestBodyMap);
+        String requestBody = objectMapper.writeValueAsString(requestBodyMap);
 
-    // Create the HTTP request
-    Request httpRequest = new Request.Builder()
-        .url("http://localhost:11434/api/generate")
-        .addHeader("Content-Type", "application/json")
-        .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
-        .build();
+        // Configura o cliente com timeouts mais longos
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)   // tempo para abrir conexão
+                .writeTimeout(30, TimeUnit.SECONDS)     // tempo para enviar request
+                .readTimeout(5, TimeUnit.MINUTES)       // tempo para esperar a resposta
+                .build();
 
-    // Send the request and process the response
-    try (Response response = client.newCall(httpRequest).execute()) {
-      if (!response.isSuccessful()) {
-        throw new IOException("Error in request: " + response.code() + " - " + response.message());
-      }
+        // Cria a requisição HTTP
+        Request httpRequest = new Request.Builder()
+                .url("http://localhost:11434/api/generate")
+                .addHeader("Content-Type", "application/json")
+                .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                .build();
 
-      // Process the response
-      String responseBody = response.body().string();
+        // Envia a requisição e processa a resposta
+        try (Response response = client.newCall(httpRequest).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Error in request: " + response.code() + " - " + response.message());
+            }
 
-      // Assuming the response is a JSON object with a "response" field
-      String llamaResponse = objectMapper.readTree(responseBody)
-          .path("response")
-          .asText();
+            // Corpo da resposta
+            String responseBody = response.body().string();
 
-      dbPrompt.setResponseInLastIndex(llamaResponse);
-      dbPrompt.updateLastUpdate();
-      iaPropmpRepository.save(dbPrompt);
-      return llamaResponse;
+            // Extrai o campo "response" do JSON
+            String llamaResponse = objectMapper.readTree(responseBody)
+                    .path("response")
+                    .asText();
+
+            // Atualiza no banco
+            dbPrompt.setResponseInLastIndex(llamaResponse);
+            dbPrompt.updateLastUpdate();
+            iaPropmpRepository.save(dbPrompt);
+
+            return llamaResponse;
+        }
     }
-  }
 
   private String findGeminiExecutable() throws IOException {
     // 1. Check for GEMINI_PATH
@@ -156,7 +166,7 @@ public class IAService {
         ProcessBuilder pb = new ProcessBuilder("/bin/bash", "-c", ". /home/julianos/.config/nvm/nvm.sh && which gemini");
         pb.redirectErrorStream(true); // Combine stdout and stderr
         Process p = pb.start();
-        
+
         StringBuilder output = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
             String line;
@@ -169,7 +179,7 @@ public class IAService {
             String path = output.toString().trim();
             if (!path.isEmpty()) return path;
         }
-        
+
         // If we are here, it failed. Throw with the output for debugging.
         throw new IOException("NVM-aware fallback failed. Output: " + output.toString());
 
