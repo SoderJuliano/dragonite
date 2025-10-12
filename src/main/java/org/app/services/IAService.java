@@ -188,44 +188,90 @@ public class IAService {
     }
   }
 
-  public String geminiResponse(IAPropmptRequest prompt) throws IOException {
-    try {
-      String geminiPath = findGeminiExecutable();
+//  public String geminiResponse(IAPropmptRequest prompt) throws IOException {
+//    try {
+//      String geminiPath = findGeminiExecutable();
+//
+//      // Escape single quotes in the prompt to prevent shell injection
+//      String escapedPrompt = prompt.getNewPrompt().replace("'", "'\\''");
+//      String command = String.format(". /home/julianos/.config/nvm/nvm.sh && %s -p '%s'", geminiPath, escapedPrompt);
+//
+//      ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", command);
+//      processBuilder.redirectErrorStream(true); // Redirect error stream to input stream
+//
+//      Process process = processBuilder.start();
+//
+//      StringBuilder output = new StringBuilder();
+//      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+//
+//      String line;
+//      while ((line = reader.readLine()) != null) {
+//        output.append(line).append("\n");
+//      }
+//
+//      int exitCode = process.waitFor();
+//      if (exitCode != 0) {
+//        String errorMessage = "Gemini CLI exited with error code " + exitCode + ". Output:\n" + output;
+//        LocalLog.logErr(errorMessage);
+//        throw new IOException(errorMessage);
+//      }
+//
+//      String finalOutput = output.toString().replace("Loaded cached credentials.", "").trim();
+//      return finalOutput;
+//
+//    } catch (IOException | InterruptedException e) {
+//      if (e instanceof InterruptedException) {
+//          Thread.currentThread().interrupt();
+//      }
+//      String errorMessage = "Failed to execute Gemini CLI: " + e.getMessage();
+//      LocalLog.logErr(errorMessage);
+//      throw new IOException(errorMessage, e);
+//    }
+//  }
 
-      // Escape single quotes in the prompt to prevent shell injection
-      String escapedPrompt = prompt.getNewPrompt().replace("'", "'\\''");
-      String command = String.format(". /home/julianos/.config/nvm/nvm.sh && %s -p '%s'", geminiPath, escapedPrompt);
+    public String geminiResponse(IAPropmptRequest prompt) throws IOException {
+        try {
+            String geminiPath = "/home/soder/.nvm/versions/node/v22.14.0/bin/gemini";
 
-      ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", command);
-      processBuilder.redirectErrorStream(true); // Redirect error stream to input stream
+            // Escape single quotes in the prompt to prevent shell injection
+            String escapedPrompt = prompt.getNewPrompt().replace("'", "'\\''");
+            String command = String.format(". /home/soder/.nvm/nvm.sh && %s -p '%s'", geminiPath, escapedPrompt);
 
-      Process process = processBuilder.start();
+            ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", command);
+            processBuilder.redirectErrorStream(true); // Redirect error stream to input stream
 
-      StringBuilder output = new StringBuilder();
-      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            Process process = processBuilder.start();
 
-      String line;
-      while ((line = reader.readLine()) != null) {
-        output.append(line).append("\n");
-      }
+            // By closing the process's output stream, we signal to the child process
+            // that it should not expect any input. This prevents the child process from
+            // hanging indefinitely while waiting for input that will never be sent.
+            process.getOutputStream().close();
 
-      int exitCode = process.waitFor();
-      if (exitCode != 0) {
-        String errorMessage = "Gemini CLI exited with error code " + exitCode + ". Output:\n" + output;
-        LocalLog.logErr(errorMessage);
-        throw new IOException(errorMessage);
-      }
+            StringBuilder output = new StringBuilder();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
-      String finalOutput = output.toString().replace("Loaded cached credentials.", "").trim();
-      return finalOutput;
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
 
-    } catch (IOException | InterruptedException e) {
-      if (e instanceof InterruptedException) {
-          Thread.currentThread().interrupt();
-      }
-      String errorMessage = "Failed to execute Gemini CLI: " + e.getMessage();
-      LocalLog.logErr(errorMessage);
-      throw new IOException(errorMessage, e);
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                String errorMessage = "Gemini CLI exited with error code " + exitCode + ". Output:\n" + output;
+                LocalLog.logErr(errorMessage);
+                throw new IOException(errorMessage);
+            }
+
+            String finalOutput = output.toString().replace("Loaded cached credentials.", "").trim();
+            return finalOutput;
+
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            String errorMessage = "Failed to execute Gemini CLI: " + e.getMessage();
+            LocalLog.logErr(errorMessage);
+            throw new IOException(errorMessage, e);
+        }
     }
-  }
 }
