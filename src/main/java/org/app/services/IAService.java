@@ -90,7 +90,7 @@ public class IAService {
     }
   }
 
-    public String llama3Response(IAPropmptRequest request) throws IOException {
+    public String promptLlamaTiny(IAPropmptRequest request) throws IOException {
 
         // Fail fast
         IAPrompt dbPrompt = handlePropmpts(request, iaPropmpRepository, userRepository);
@@ -100,6 +100,56 @@ public class IAService {
     requestBodyMap.put("model", "tinyllama");
     requestBodyMap.put("prompt", request.getNewPrompt());
     requestBodyMap.put("stream", false);
+
+        String requestBody = objectMapper.writeValueAsString(requestBodyMap);
+
+        // Configura o cliente com timeouts mais longos
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)   // tempo para abrir conexão
+                .writeTimeout(30, TimeUnit.SECONDS)     // tempo para enviar request
+                .readTimeout(5, TimeUnit.MINUTES)       // tempo para esperar a resposta
+                .build();
+
+        // Cria a requisição HTTP
+        Request httpRequest = new Request.Builder()
+                .url("http://localhost:11434/api/generate")
+                .addHeader("Content-Type", "application/json")
+                .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                .build();
+
+        // Envia a requisição e processa a resposta
+        try (Response response = client.newCall(httpRequest).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Error in request: " + response.code() + " - " + response.message());
+            }
+
+            // Corpo da resposta
+            String responseBody = response.body().string();
+
+            // Extrai o campo "response" do JSON
+            String llamaResponse = objectMapper.readTree(responseBody)
+                    .path("response")
+                    .asText();
+
+            // Atualiza no banco
+            dbPrompt.setResponseInLastIndex(llamaResponse);
+            dbPrompt.updateLastUpdate();
+            iaPropmpRepository.save(dbPrompt);
+
+            return llamaResponse;
+        }
+    }
+
+    public String llama3Response(IAPropmptRequest request) throws IOException {
+
+        // Fail fast
+        IAPrompt dbPrompt = handlePropmpts(request, iaPropmpRepository, userRepository);
+
+        // Create the request body
+        Map<String, Object> requestBodyMap = new HashMap<>();
+        requestBodyMap.put("model", "llama3");
+        requestBodyMap.put("prompt", request.getNewPrompt());
+        requestBodyMap.put("stream", false);
 
         String requestBody = objectMapper.writeValueAsString(requestBodyMap);
 
