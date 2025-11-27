@@ -1,10 +1,12 @@
 package org.app.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.app.Exceptions.BadRequestException;
 import org.app.model.entity.User;
 import org.app.model.requests.IAPropmptRequest;
 import org.app.services.IAService;
 import org.app.services.ResumeAgentService;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -47,6 +49,15 @@ public class IAController {
         }
         return iaService.llama3Response(prompt);
     }
+
+    @PostMapping(value = "/llama3-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public void streamLlama3Response(
+            @RequestBody IAPropmptRequest request,
+            HttpServletResponse response
+    ) throws IOException {
+        iaService.llama3StreamResponse(request, response);
+    }
+
 
     @PostMapping("/llamatiny")
     public String generateTextWithLlamaTiny(@RequestBody IAPropmptRequest prompt) throws IOException {

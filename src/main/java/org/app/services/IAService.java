@@ -1,6 +1,7 @@
 package org.app.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import okhttp3.*;
 
 import org.app.model.IAPrompt;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -189,6 +191,81 @@ public class IAService {
             return llamaResponse;
         }
     }
+
+    public void llama3StreamResponse(IAPropmptRequest request, HttpServletResponse response) throws IOException {
+
+        // Fail fast
+        IAPrompt dbPrompt = handlePropmpts(request, iaPropmpRepository, userRepository);
+
+        // Força o flush automático no HTTP
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("text/event-stream");
+
+        PrintWriter writer = response.getWriter();
+
+        // Corpo da requisição
+        Map<String, Object> requestBodyMap = new HashMap<>();
+        requestBodyMap.put("model", "llama3");
+        requestBodyMap.put("prompt", request.getNewPrompt());
+        requestBodyMap.put("stream", true); // 🔥 streaming verdadeiro!
+
+        String requestBody = objectMapper.writeValueAsString(requestBodyMap);
+
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(0, TimeUnit.SECONDS) // 🔥 streaming nunca timeout
+                .build();
+
+        Request httpRequest = new Request.Builder()
+                .url("http://localhost:11434/api/generate")
+                .addHeader("Content-Type", "application/json")
+                .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                .build();
+
+        try (Response ollamaResponse = client.newCall(httpRequest).execute()) {
+            if (!ollamaResponse.isSuccessful()) {
+                writer.write("event: error\ndata: Request failed " + ollamaResponse.code() + "\n\n");
+                writer.flush();
+                return;
+            }
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(ollamaResponse.body().byteStream()));
+
+            String line;
+            StringBuilder fullResponse = new StringBuilder();
+
+            while ((line = reader.readLine()) != null) {
+                if (line.isBlank()) continue;
+
+                // Cada linha do Ollama STREAM é um JSON
+                String token = objectMapper.readTree(line)
+                        .path("response")
+                        .asText();
+
+                if (!token.isEmpty()) {
+                    fullResponse.append(token);
+
+                    // 🔥 Envia token imediatamente para o front
+                    writer.write("data: " + token + "\n\n");
+                    writer.flush();
+                }
+
+                boolean done = objectMapper.readTree(line).path("done").asBoolean(false);
+                if (done) break;
+            }
+
+            // 🔥 Finaliza stream
+            writer.write("event: end\ndata: done\n\n");
+            writer.flush();
+
+            // Salva no banco
+            dbPrompt.setResponseInLastIndex(fullResponse.toString());
+            dbPrompt.updateLastUpdate();
+            iaPropmpRepository.save(dbPrompt);
+        }
+    }
+
 
   private String findGeminiExecutable() throws IOException {
     // 1. Check for GEMINI_PATH
