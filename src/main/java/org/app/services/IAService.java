@@ -145,14 +145,16 @@ public class IAService {
 
     public String llama3Response(IAPropmptRequest request) throws IOException {
 
+        LocalLog.log("[llama3Response] Received from user "+ request.getIp() +" request: " + request.getNewPrompt());
         // Fail fast
         IAPrompt dbPrompt = handlePropmpts(request, iaPropmpRepository, userRepository);
 
-        String instrucoes = null;
+        String instrucoes = "";
         switch (request.getLanguage()) {
             case PORTUGUESE -> instrucoes = "Responder em português.";
             default -> instrucoes = "Answer in English.";
         }
+        LocalLog.log("[llama3Response] Instrucoes: " + instrucoes);
 
         // Create the request body
         Map<String, Object> requestBodyMap = new HashMap<>();
@@ -161,6 +163,8 @@ public class IAService {
         requestBodyMap.put("stream", false);
 
         String requestBody = objectMapper.writeValueAsString(requestBodyMap);
+
+        LocalLog.log("[llama3Response] Request body: " + requestBody);
 
         // Configura o cliente com timeouts mais longos
         OkHttpClient client = new OkHttpClient.Builder()
@@ -179,6 +183,7 @@ public class IAService {
         // Envia a requisição e processa a resposta
         try (Response response = client.newCall(httpRequest).execute()) {
             if (!response.isSuccessful()) {
+                LocalLog.logErr("[llama3Response] Error in request: " + response.code() + " - " + response.message());
                 throw new IOException("Error in request: " + response.code() + " - " + response.message());
             }
 
@@ -194,6 +199,8 @@ public class IAService {
             dbPrompt.setResponseInLastIndex(llamaResponse);
             dbPrompt.updateLastUpdate();
             iaPropmpRepository.save(dbPrompt);
+
+            LocalLog.log("[llama3Response] Responding to the user "+request.getIp());
 
             return llamaResponse;
         }
