@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import okhttp3.*;
 
 import org.app.model.IAPrompt;
+import org.app.model.Language;
 import org.app.model.requests.IAPropmptRequest;
 import org.app.repository.IAPropmpRepository;
 import org.app.repository.UserRepository;
@@ -147,10 +148,16 @@ public class IAService {
         // Fail fast
         IAPrompt dbPrompt = handlePropmpts(request, iaPropmpRepository, userRepository);
 
+        String instrucoes = null;
+        switch (request.getLanguage()) {
+            case PORTUGUESE -> instrucoes = "Responder em português.";
+            default -> instrucoes = "Answer in English.";
+        }
+
         // Create the request body
         Map<String, Object> requestBodyMap = new HashMap<>();
         requestBodyMap.put("model", "llama3");
-        requestBodyMap.put("prompt", request.getNewPrompt());
+        requestBodyMap.put("prompt", request.getNewPrompt()+instrucoes);
         requestBodyMap.put("stream", false);
 
         String requestBody = objectMapper.writeValueAsString(requestBodyMap);
