@@ -98,10 +98,9 @@ public class AgentServiceUtil {
         baseIAPrompt.updateLastUpdate();
         return iaPropmpRepository.save(baseIAPrompt);
     }
-
     private static boolean canIUserAINow(IAPrompt baseIAPrompt, UserRepository userRepository) {
         return baseIAPrompt.getPrompts().size() <= 20
-                || Boolean.TRUE.equals(userRepository.hasPremiumAccount(baseIAPrompt.getUserEmail()));
+                || Boolean.TRUE.equals(userRepository.existsByContactEmailAndPremiumTrue(baseIAPrompt.getUserEmail()));
     }
 
     private static String getErrorMessage(boolean isPt) {

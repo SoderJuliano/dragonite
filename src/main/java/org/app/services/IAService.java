@@ -18,6 +18,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -277,6 +278,79 @@ public class IAService {
             dbPrompt.setResponseInLastIndex(fullResponse.toString());
             dbPrompt.updateLastUpdate();
             iaPropmpRepository.save(dbPrompt);
+        }
+    }
+
+    // MÉTODOS UTILIZANDO GPU
+    public String lmStudioResponse(IAPropmptRequest request) throws IOException {
+
+        LocalLog.log("[lmStudioResponse] Received from user " + request.getIp() + " request: " + request.getNewPrompt());
+
+        // Fail fast + load/update prompt (mesma lógica do método antigo)
+        IAPrompt dbPrompt = handlePropmpts(request, iaPropmpRepository, userRepository);
+
+        // Idioma
+        String instrucoes = switch (request.getLanguage()) {
+            case PORTUGUESE -> "Responda sempre em português.";
+            default -> "Respond always in English.";
+        };
+        LocalLog.log("[lmStudioResponse] Instrucoes: " + instrucoes);
+
+        // Corpo da requisição no formato OpenAI-compatible
+        Map<String, Object> requestBodyMap = new HashMap<>();
+        requestBodyMap.put("model", "lmstudio-community/Meta-Llama-3-8B-Instruct-GGUF");
+        requestBodyMap.put("stream", false);
+        requestBodyMap.put("temperature", 0.7);
+
+        List<Map<String, String>> messages = List.of(
+                Map.of("role", "system", "content", instrucoes),
+                Map.of("role", "user", "content", request.getNewPrompt())
+        );
+
+        requestBodyMap.put("messages", messages);
+
+        String requestBody = objectMapper.writeValueAsString(requestBodyMap);
+
+        LocalLog.log("[lmStudioResponse] Request body: " + requestBody);
+
+        // Cliente otimizado p/ GPU: LM Studio responde rápido, mas completions longas precisam de timeout grande
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(20, TimeUnit.SECONDS)
+                .writeTimeout(20, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.MINUTES)
+                .build();
+
+        Request httpRequest = new Request.Builder()
+                .url("http://localhost:1234/v1/chat/completions")
+                .addHeader("Content-Type", "application/json")
+                .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                .build();
+
+        try (Response response = client.newCall(httpRequest).execute()) {
+            if (!response.isSuccessful()) {
+                LocalLog.logErr("[lmStudioResponse] Error: " + response.code() + " - " + response.message());
+                throw new IOException("Error: " + response.code() + " - " + response.message());
+            }
+
+            String responseBody = response.body().string();
+
+            // Caminho OpenAI:
+            // choices[0].message.content
+            String answer = objectMapper.readTree(responseBody)
+                    .path("choices")
+                    .path(0)
+                    .path("message")
+                    .path("content")
+                    .asText();
+
+            // Atualiza o banco
+            dbPrompt.setResponseInLastIndex(answer);
+            dbPrompt.updateLastUpdate();
+            iaPropmpRepository.save(dbPrompt);
+
+            LocalLog.log("[lmStudioResponse] Responding to user " + request.getIp());
+
+            return answer;
         }
     }
 

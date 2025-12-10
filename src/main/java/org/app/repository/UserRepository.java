@@ -26,8 +26,11 @@ public interface UserRepository extends MongoRepository<User, String> {
     //Aqui pra saber se tem conta premium tanto faz a conta entao da pra fazer uma busaca simples
     //{ "contact": { "email": "user@example.com" }, "premium": true, "language": "pt-br" }
     //{ "contact": { "email": "user@example.com" }, "premium": true, "language": "en-us" }
-    @Query("{ 'contact.email' : ?0, 'premium' : true }")
-    Boolean hasPremiumAccount(String email);
+//    QUEBRADO NÃO ESTAVA FUNCIONANDO, EMAIL É UMA LISTAN E ESSA QUERY RETORNA UM DOCUMENT
+//    @Query("{ 'contact.email' : ?0, 'premium' : true }")
+//    Boolean hasPremiumAccount(String email);
+
+    boolean existsByContactEmailAndPremiumTrue(String email);
 
     List<User> findAllByContactEmail(String email);
 }

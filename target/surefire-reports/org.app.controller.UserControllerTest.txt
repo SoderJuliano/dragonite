@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: org.app.controller.UserControllerTest
 -------------------------------------------------------------------------------
-Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.160 s -- in org.app.controller.UserControllerTest
+Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.271 s -- in org.app.controller.UserControllerTest
