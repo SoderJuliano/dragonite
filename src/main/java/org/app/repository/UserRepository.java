@@ -29,5 +29,6 @@ public interface UserRepository extends MongoRepository<User, String> {
     @Query("{ 'contact.email' : ?0, 'premium' : true }")
     Boolean hasPremiumAccount(String email);
 
+    List<User> findAllByContactEmail(String email);
 }
 

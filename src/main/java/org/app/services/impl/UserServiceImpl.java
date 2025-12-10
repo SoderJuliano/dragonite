@@ -243,6 +243,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void setPremiumAccount(String email) {
+        LocalLog.log("Recived call to set premium account for user " + email);
+        List<User> users = userRepository.findAllByContactEmail(email);
+        users.forEach(u -> {
+            u.setPremium(true);getContact().email()
+            LocalLog.log("Set premium account for user "+ u.getName());
+        });
+        userRepository.saveAll(users);
+        LocalLog.log("All set for all " + users.size()+ " user's for email " + email);
+    }
+
+    @Override
     public void updateUserName(String name, String email, String language) {
         Optional<User> userOptional = userRepository.findFirstByEmailAndLanguage(email, language);
         if (userOptional.isEmpty()) {

@@ -40,4 +40,6 @@ public interface UserService {
     public void grantPremiumAccess(String id);
 
     public void resendEmail(String email, String lang);
+
+    void setPremiumAccount(String email);
 }

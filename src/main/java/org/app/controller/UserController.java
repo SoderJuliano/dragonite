@@ -148,4 +148,10 @@ public class UserController {
         userService.resendEmail(email, language);
         return ResponseEntity.ok(new DefaultAnswer());
     }
+
+    @PatchMapping(path = "/premium/{email}")
+    public ResponseEntity<DefaultAnswer> premium(@PathVariable String email) {
+        userService.setPremiumAccount(email);
+        return ResponseEntity.status(200).body(new DefaultAnswer());
+    }
 }
