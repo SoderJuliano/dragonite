@@ -247,7 +247,7 @@ public class UserServiceImpl implements UserService {
         LocalLog.log("Recived call to set premium account for user " + email);
         List<User> users = userRepository.findAllByContactEmail(email);
         users.forEach(u -> {
-            u.setPremium(true);getContact().email()
+            u.setPremium(true);
             LocalLog.log("Set premium account for user "+ u.getName());
         });
         userRepository.saveAll(users);
