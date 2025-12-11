@@ -281,12 +281,13 @@ public class IAService {
         }
     }
 
-    // MÉTODOS UTILIZANDO GPU
-    public String lmStudioResponse(IAPropmptRequest request) throws IOException {
+    // MÉTODO UTILIZANDO LLAMA SERVER (ROCm / GPU)
+    public String llamaServerResponse(IAPropmptRequest request) throws IOException {
 
-        LocalLog.log("[lmStudioResponse] Received from user " + request.getIp() + " request: " + request.getNewPrompt());
+        LocalLog.log("[LLAMA SERVER] Received from user " + request.getIp() +
+                " request: " + request.getNewPrompt());
 
-        // Fail fast + load/update prompt (mesma lógica do método antigo)
+        // Fail fast + gerenciamento de prompts
         IAPrompt dbPrompt = handlePropmpts(request, iaPropmpRepository, userRepository);
 
         // Idioma
@@ -294,11 +295,12 @@ public class IAService {
             case PORTUGUESE -> "Responda sempre em português.";
             default -> "Respond always in English.";
         };
-        LocalLog.log("[lmStudioResponse] Instrucoes: " + instrucoes);
 
-        // Corpo da requisição no formato OpenAI-compatible
+        LocalLog.log("[LLAMA SERVER] Instrucoes: " + instrucoes);
+
+        // Corpo OpenAI-Compatible
         Map<String, Object> requestBodyMap = new HashMap<>();
-        requestBodyMap.put("model", "lmstudio-community/Meta-Llama-3-8B-Instruct-GGUF");
+        requestBodyMap.put("model", "local-llama"); // apenas nominal, o servidor ignora
         requestBodyMap.put("stream", false);
         requestBodyMap.put("temperature", 0.7);
 
@@ -311,15 +313,16 @@ public class IAService {
 
         String requestBody = objectMapper.writeValueAsString(requestBodyMap);
 
-        LocalLog.log("[lmStudioResponse] Request body: " + requestBody);
+        LocalLog.log("[LLAMA SERVER] Request body: " + requestBody);
 
-        // Cliente otimizado p/ GPU: LM Studio responde rápido, mas completions longas precisam de timeout grande
+        // Client otimizado para inferência em GPU
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(20, TimeUnit.SECONDS)
                 .writeTimeout(20, TimeUnit.SECONDS)
                 .readTimeout(5, TimeUnit.MINUTES)
                 .build();
 
+        // Endpoint do llama-server (OpenAI-style)
         Request httpRequest = new Request.Builder()
                 .url("http://localhost:1234/v1/chat/completions")
                 .addHeader("Content-Type", "application/json")
@@ -328,14 +331,14 @@ public class IAService {
 
         try (Response response = client.newCall(httpRequest).execute()) {
             if (!response.isSuccessful()) {
-                LocalLog.logErr("[lmStudioResponse] Error: " + response.code() + " - " + response.message());
+                LocalLog.logErr("[LLAMA SERVER] Error: " + response.code() +
+                        " - " + response.message());
                 throw new IOException("Error: " + response.code() + " - " + response.message());
             }
 
             String responseBody = response.body().string();
 
-            // Caminho OpenAI:
-            // choices[0].message.content
+            // Padrão OpenAI:
             String answer = objectMapper.readTree(responseBody)
                     .path("choices")
                     .path(0)
@@ -343,19 +346,19 @@ public class IAService {
                     .path("content")
                     .asText();
 
-            // Atualiza o banco
+            // Atualiza banco
             dbPrompt.setResponseInLastIndex(answer);
             dbPrompt.updateLastUpdate();
             iaPropmpRepository.save(dbPrompt);
 
-            LocalLog.log("[lmStudioResponse] Responding to user " + request.getIp());
+            LocalLog.log("[LLAMA SERVER] Responding to user " + request.getIp());
 
             return answer;
         }
     }
 
 
-  private String findGeminiExecutable() throws IOException {
+    private String findGeminiExecutable() throws IOException {
     // 1. Check for GEMINI_PATH
     String geminiPath = System.getenv("GEMINI_PATH");
     if (geminiPath != null && !geminiPath.isEmpty()) {
