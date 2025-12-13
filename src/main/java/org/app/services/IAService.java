@@ -246,8 +246,8 @@ public class IAService {
 
             String line;
             StringBuilder fullResponse = new StringBuilder();
-            String previousToken = null;  // ← NOVO: Rastreia token anterior
-            boolean isFirstToken = true;   // ← NOVO: Flag para primeiro token
+            String previousToken = null;
+            boolean isFirstToken = true;
 
             while ((line = reader.readLine()) != null) {
                 if (line.isBlank()) continue;
@@ -257,7 +257,7 @@ public class IAService {
                 String token = jsonNode.path("response").asText();
 
                 if (!token.isEmpty()) {
-                    // ========== NOVA LÓGICA DE ESPAÇAMENTO ==========
+                    // ========== LÓGICA DE ESPAÇAMENTO FINAL ==========
                     String processedToken = token;
 
                     if (!isFirstToken && previousToken != null) {
@@ -266,10 +266,19 @@ public class IAService {
                         boolean prevEndedWithSpace = previousToken.matches(".*\\s$");
                         boolean prevWasPunctuation = previousToken.matches("^[`\"'(\\[]$");
 
-                        // Sub-word: ≤4 chars, começa com minúscula, anterior termina com minúscula
+                        // Detecção de sub-palavras (sufixos)
                         boolean tokenStartsWithLower = token.matches("^[a-zà-ÿ].*");
                         boolean prevEndsWithLower = previousToken.matches(".*[a-zà-ÿ]$");
-                        boolean likelyContinuation = token.length() <= 5 && tokenStartsWithLower && prevEndsWithLower;
+
+                        // Palavras comuns PT-BR e EN-US que SEMPRE separam
+                        boolean prevIsCommonWord = previousToken.toLowerCase()
+                                .matches("a|o|e|é|da|do|de|em|um|uma|que|se|por|para|com|na|no|ou|as|os|the|of|in|on|at|to|for|with|by|from|is|are|was|were|be|or|and|but|if|it");
+
+                        // Token ≤6 chars + ambos minúsculas + anterior NÃO é palavra comum
+                        boolean likelyContinuation = tokenStartsWithLower &&
+                                prevEndsWithLower &&
+                                token.length() <= 6 &&
+                                !prevIsCommonWord;
 
                         boolean needsSpace = !tokenStartsWithSpace &&
                                 !tokenIsPunctuation &&
@@ -282,14 +291,13 @@ public class IAService {
                         }
                     }
 
-                    previousToken = token;  // Guarda o token ORIGINAL (sem espaço adicionado)
+                    previousToken = token;
                     isFirstToken = false;
                     // ================================================
 
                     fullResponse.append(processedToken);
 
-                    // 🔥 Envia token PROCESSADO (com espaço) para o front
-                    // Precisa fazer escape do JSON
+                    // Envia token para o frontend
                     String jsonToken = objectMapper.writeValueAsString(processedToken);
                     writer.write("data: {\"response\":" + jsonToken + "}\n\n");
                     writer.flush();
@@ -299,7 +307,7 @@ public class IAService {
                 if (done) break;
             }
 
-            // 🔥 Finaliza stream
+            // Finaliza stream
             writer.write("event: end\ndata: done\n\n");
             writer.flush();
 
