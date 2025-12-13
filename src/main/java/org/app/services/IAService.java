@@ -269,7 +269,7 @@ public class IAService {
                         // Sub-word: ≤4 chars, começa com minúscula, anterior termina com minúscula
                         boolean tokenStartsWithLower = token.matches("^[a-zà-ÿ].*");
                         boolean prevEndsWithLower = previousToken.matches(".*[a-zà-ÿ]$");
-                        boolean likelyContinuation = token.length() <= 4 && tokenStartsWithLower && prevEndsWithLower;
+                        boolean likelyContinuation = token.length() <= 5 && tokenStartsWithLower && prevEndsWithLower;
 
                         boolean needsSpace = !tokenStartsWithSpace &&
                                 !tokenIsPunctuation &&
