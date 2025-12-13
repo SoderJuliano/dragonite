@@ -1,11 +1,10 @@
 package org.app.services;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import okhttp3.*;
-
 import org.app.model.IAPrompt;
-import org.app.model.Language;
 import org.app.model.requests.IAPropmptRequest;
 import org.app.repository.IAPropmpRepository;
 import org.app.repository.UserRepository;
@@ -18,7 +17,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -209,27 +207,26 @@ public class IAService {
 
     public void llama3StreamResponse(IAPropmptRequest request, HttpServletResponse response) throws IOException {
 
-        // Fail fast
         IAPrompt dbPrompt = handlePropmpts(request, iaPropmpRepository, userRepository);
 
-        // Força o flush automático no HTTP
+        // Flush automático no HTTP
         response.setCharacterEncoding("UTF-8");
         response.setContentType("text/event-stream");
 
         PrintWriter writer = response.getWriter();
 
-        // Corpo da requisição
+        // Requisição
         Map<String, Object> requestBodyMap = new HashMap<>();
         requestBodyMap.put("model", "llama3");
         requestBodyMap.put("prompt", request.getNewPrompt());
-        requestBodyMap.put("stream", true); // 🔥 streaming verdadeiro!
+        requestBodyMap.put("stream", true);
 
         String requestBody = objectMapper.writeValueAsString(requestBodyMap);
 
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .writeTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(0, TimeUnit.SECONDS) // 🔥 streaming nunca timeout
+                .readTimeout(0, TimeUnit.SECONDS)
                 .build();
 
         Request httpRequest = new Request.Builder()
@@ -249,24 +246,56 @@ public class IAService {
 
             String line;
             StringBuilder fullResponse = new StringBuilder();
+            String previousToken = null;  // ← NOVO: Rastreia token anterior
+            boolean isFirstToken = true;   // ← NOVO: Flag para primeiro token
 
             while ((line = reader.readLine()) != null) {
                 if (line.isBlank()) continue;
 
                 // Cada linha do Ollama STREAM é um JSON
-                String token = objectMapper.readTree(line)
-                        .path("response")
-                        .asText();
+                JsonNode jsonNode = objectMapper.readTree(line);
+                String token = jsonNode.path("response").asText();
 
                 if (!token.isEmpty()) {
-                    fullResponse.append(token);
+                    // ========== NOVA LÓGICA DE ESPAÇAMENTO ==========
+                    String processedToken = token;
 
-                    // 🔥 Envia token imediatamente para o front
-                    writer.write("data: " + token + "\n\n");
+                    if (!isFirstToken && previousToken != null) {
+                        boolean tokenStartsWithSpace = token.matches("^\\s.*");
+                        boolean tokenIsPunctuation = token.matches("^[.,!?;:()\\[\\]`\"'\\-].*");
+                        boolean prevEndedWithSpace = previousToken.matches(".*\\s$");
+                        boolean prevWasPunctuation = previousToken.matches("^[`\"'(\\[]$");
+
+                        // Sub-word: ≤4 chars, começa com minúscula, anterior termina com minúscula
+                        boolean tokenStartsWithLower = token.matches("^[a-zà-ÿ].*");
+                        boolean prevEndsWithLower = previousToken.matches(".*[a-zà-ÿ]$");
+                        boolean likelyContinuation = token.length() <= 4 && tokenStartsWithLower && prevEndsWithLower;
+
+                        boolean needsSpace = !tokenStartsWithSpace &&
+                                !tokenIsPunctuation &&
+                                !prevEndedWithSpace &&
+                                !prevWasPunctuation &&
+                                !likelyContinuation;
+
+                        if (needsSpace) {
+                            processedToken = " " + token;
+                        }
+                    }
+
+                    previousToken = token;  // Guarda o token ORIGINAL (sem espaço adicionado)
+                    isFirstToken = false;
+                    // ================================================
+
+                    fullResponse.append(processedToken);
+
+                    // 🔥 Envia token PROCESSADO (com espaço) para o front
+                    // Precisa fazer escape do JSON
+                    String jsonToken = objectMapper.writeValueAsString(processedToken);
+                    writer.write("data: {\"response\":" + jsonToken + "}\n\n");
                     writer.flush();
                 }
 
-                boolean done = objectMapper.readTree(line).path("done").asBoolean(false);
+                boolean done = jsonNode.path("done").asBoolean(false);
                 if (done) break;
             }
 
