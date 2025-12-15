@@ -72,6 +72,7 @@ public class IAController {
         return iaService.geminiResponse(prompt);
     }
 
+    @PostMapping("/gemma3")
     public String generateTextWithGemma3(@RequestBody IAPropmptRequest prompt) throws IOException {
         return iaService.getGemmaResponse(prompt);
     }
