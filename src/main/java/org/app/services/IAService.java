@@ -1,5 +1,6 @@
 package org.app.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
@@ -452,4 +453,69 @@ public class IAService {
             throw new IOException(errorMessage, e);
         }
     }
+
+    public String getGemmaResponse(IAPropmptRequest request) throws IOException {
+
+
+        LocalLog.log("[Gemma3] Received from user "+ request.getIp() +" request: " + request.getNewPrompt());
+        // Fail fast
+        IAPrompt dbPrompt = handlePropmpts(request, iaPropmpRepository, userRepository);
+
+        String instrucoes = "";
+        switch (request.getLanguage()) {
+            case PORTUGUESE -> instrucoes = "Responder em português.";
+            default -> instrucoes = "Answer in English.";
+        }
+        LocalLog.log("[Gemma3] Instrucoes: " + instrucoes);
+
+        // Create the request body
+        Map<String, Object> requestBodyMap = new HashMap<>();
+        requestBodyMap.put("model", "gemma3-4b");
+        requestBodyMap.put("prompt", request.getNewPrompt()+instrucoes);
+        requestBodyMap.put("stream", false);
+
+        String requestBody = objectMapper.writeValueAsString(requestBodyMap);
+
+        LocalLog.log("[Gemma3] Request body: " + requestBody);
+
+        // Configura o cliente com timeouts mais longos
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)   // tempo para abrir conexão
+                .writeTimeout(30, TimeUnit.SECONDS)     // tempo para enviar request
+                .readTimeout(5, TimeUnit.MINUTES)       // tempo para esperar a resposta
+                .build();
+
+        // Cria a requisição HTTP
+        Request httpRequest = new Request.Builder()
+                .url("http://localhost:11434/api/generate")
+                .addHeader("Content-Type", "application/json")
+                .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                .build();
+
+        // Envia a requisição e processa a resposta
+        try (Response response = client.newCall(httpRequest).execute()) {
+            if (!response.isSuccessful()) {
+                LocalLog.logErr("[Gemma3] Error in request: " + response.code() + " - " + response.message());
+                throw new IOException("Error in request: " + response.code() + " - " + response.message());
+            }
+
+            // Corpo da resposta
+            String responseBody = response.body().string();
+
+            // Extrai o campo "response" do JSON
+            String llamaResponse = objectMapper.readTree(responseBody)
+                    .path("response")
+                    .asText();
+
+            // Atualiza no banco
+            dbPrompt.setResponseInLastIndex(llamaResponse);
+            dbPrompt.updateLastUpdate();
+            iaPropmpRepository.save(dbPrompt);
+
+            LocalLog.log("[Gemma3] Responding to the user "+request.getIp());
+
+            return llamaResponse;
+        }
+    }
+
 }

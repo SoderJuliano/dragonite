@@ -71,4 +71,8 @@ public class IAController {
     public String generateTextWithGemini(@RequestBody IAPropmptRequest prompt) throws IOException {
         return iaService.geminiResponse(prompt);
     }
+
+    public String generateTextWithGemma3(@RequestBody IAPropmptRequest prompt) throws IOException {
+        return iaService.getGemmaResponse(prompt);
+    }
 }
