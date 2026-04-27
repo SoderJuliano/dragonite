@@ -13,7 +13,7 @@ public class SecretManager {
   static {
      //String path = "/home/soder/Área de Trabalho/app/secrets.txt";
 //    String path = "/home/soder/Desktop/app/secrets.txt";
-    String path = "/home/julianos/Documentos/workdir/app/secrets.txt";
+    String path = "/home/soder/Documents/app/secrets.txt";
 
     try (FileInputStream input = new FileInputStream(path)) {
       properties.load(input);
